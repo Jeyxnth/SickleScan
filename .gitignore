@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+
+# Raw dataset (downloaded separately via Kaggle, not committed)
+data/raw/
+
+# Large intermediate training artifacts (final deliverables live in model_output/)
+artifacts/

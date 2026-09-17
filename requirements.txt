@@ -1,0 +1,7 @@
+tensorflow-cpu==2.16.1
+numpy
+pillow
+scikit-learn
+matplotlib
+kaggle
+kagglehub
