@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Simple droplet shape, standing in for a blood-smear icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,24 C54,24 34,52 34,68 C34,79.05 43.4,88 54,88 C64.6,88 74,79.05 74,68 C74,52 54,24 54,24 Z" />
+</vector>
