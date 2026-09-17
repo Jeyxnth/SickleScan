@@ -1,0 +1,132 @@
+package com.sicklescan.app
+
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.sicklescan.app.data.CsvExporter
+import com.sicklescan.app.data.DashboardAggregator
+import com.sicklescan.app.data.ScreeningRepository
+import com.sicklescan.app.databinding.FragmentDashboardBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Locale
+
+/**
+ * Aggregate stats + trend + CSV export over the local screening log. This
+ * is a single device's own activity, not a synced multi-worker view --
+ * that note is shown directly in the layout (dashboard_local_note), not
+ * buried in a dialog.
+ */
+class DashboardFragment : Fragment() {
+
+    private var _binding: FragmentDashboardBinding? = null
+    private val binding get() = _binding!!
+
+    private lateinit var repository: ScreeningRepository
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        repository = ScreeningRepository(requireContext())
+        binding.btnExportCsv.setOnClickListener { onExportClicked() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh every time this tab is shown, so a screening just logged
+        // on the Screen tab is reflected immediately.
+        refresh()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun refresh() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val records = withContext(Dispatchers.IO) { repository.getAllRecords() }
+            val stats = DashboardAggregator.compute(records)
+
+            if (_binding == null) return@launch // view may be gone by the time this resumes
+
+            if (stats.total == 0) {
+                binding.emptyText.visibility = View.VISIBLE
+                binding.statsContainer.visibility = View.GONE
+                return@launch
+            }
+
+            binding.emptyText.visibility = View.GONE
+            binding.statsContainer.visibility = View.VISIBLE
+
+            binding.totalText.text = getString(R.string.dashboard_total_format, stats.total)
+            binding.breakdownText.text = getString(
+                R.string.dashboard_breakdown_format,
+                stats.positivePercent,
+                stats.negativePercent,
+                stats.borderlinePercent,
+            )
+            binding.referralText.text = getString(R.string.dashboard_referral_format, stats.referralCount)
+            binding.barChart.setData(stats.dailyCounts)
+        }
+    }
+
+    private fun onExportClicked() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val records = withContext(Dispatchers.IO) { repository.getAllRecords() }
+            if (records.isEmpty()) {
+                Toast.makeText(requireContext(), getString(R.string.export_empty), Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            try {
+                val uri = withContext(Dispatchers.IO) { writeCsvFile(records.let { CsvExporter.toCsv(it) }) }
+                shareCsv(uri)
+            } catch (e: IOException) {
+                Log.e(TAG, "CSV export failed", e)
+                Toast.makeText(requireContext(), getString(R.string.export_failed), Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun writeCsvFile(csv: String): android.net.Uri {
+        val exportsDir = File(requireContext().cacheDir, "exports").apply { mkdirs() }
+        val fileName = "sicklescan_log_${FILENAME_TIMESTAMP.format(System.currentTimeMillis())}.csv"
+        val file = File(exportsDir, fileName)
+        file.writeText(csv)
+        return FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+    }
+
+    private fun shareCsv(uri: android.net.Uri) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.export_chooser_title)))
+    }
+
+    companion object {
+        private const val TAG = "DashboardFragment"
+        private val FILENAME_TIMESTAMP = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+    }
+}
