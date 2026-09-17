@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SickleScan</string>
+
+    <string name="take_photo">Take Photo</string>
+    <string name="choose_from_gallery">Choose from Gallery</string>
+    <string name="analyze">Analyze</string>
+    <string name="analyzing">Analyzing…</string>
+    <string name="no_image_selected">No image selected yet</string>
+    <string name="screening_disclaimer">Screening aid only — confirm with lab test</string>
+
+    <string name="confidence_format">Confidence: %1$.1f%%</string>
+    <string name="result_label_format">Result: %1$s</string>
+
+    <string name="error_no_image">Please take a photo or choose one from the gallery first.</string>
+    <string name="error_corrupt_image">Couldn\'t read that image — it may be corrupted or in an unsupported format. Please try another.</string>
+    <string name="error_model_load">Couldn\'t load the on-device model. Please reinstall the app.</string>
+    <string name="error_inference">Something went wrong while analyzing the image. Please try again.</string>
+    <string name="error_camera_permission">Camera permission is required to take a photo.</string>
+    <string name="error_storage_permission">Storage permission is required to choose a photo from the gallery.</string>
+
+    <string name="nav_screen">Screen</string>
+    <string name="nav_dashboard">Dashboard</string>
+
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_local_note">This data is local to this device only — it reflects this phone\'s screening activity, not a synced multi-worker view.</string>
+    <string name="dashboard_total_format">Total screenings: %1$d</string>
+    <string name="dashboard_breakdown_format">Positive %1$.0f%% · Negative %2$.0f%% · Borderline %3$.0f%%</string>
+    <string name="dashboard_referral_format">Flagged for lab confirmation: %1$d</string>
+    <string name="dashboard_trend_title">Screenings per day (last 7 days)</string>
+    <string name="dashboard_empty">No screenings logged yet. Results are recorded automatically after each analysis.</string>
+    <string name="export_csv">Export CSV</string>
+    <string name="export_empty">Nothing to export yet — run a screening first.</string>
+    <string name="export_failed">Couldn\'t export the CSV file. Please try again.</string>
+    <string name="export_chooser_title">Share screening log</string>
+</resources>

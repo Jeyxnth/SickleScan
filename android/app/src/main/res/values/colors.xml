@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_primary">#B71C1C</color>
+
+    <!-- Status colors: always paired with a distinct icon shape too, never
+         color alone, for colorblind-safe distinction. -->
+    <color name="status_positive">#C62828</color>
+    <color name="status_positive_bg">#FDECEA</color>
+    <color name="status_borderline">#E65100</color>
+    <color name="status_borderline_bg">#FFF3E0</color>
+    <color name="status_negative">#2E7D32</color>
+    <color name="status_negative_bg">#E8F5E9</color>
+
+    <color name="disclaimer_gray">#616161</color>
+
+    <!-- Kept for compatibility with any remaining references. -->
+    <color name="positive_red">@color/status_positive</color>
+    <color name="negative_green">@color/status_negative</color>
+</resources>
