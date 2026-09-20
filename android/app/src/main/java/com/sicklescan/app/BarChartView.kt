@@ -6,11 +6,12 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.view.View
+import com.google.android.material.color.MaterialColors
 import com.sicklescan.app.data.DailyCount
 import kotlin.math.max
 
 /**
- * A minimal bar chart drawn directly with Canvas -- screenings per day.
+ * A minimal bar chart drawn directly with Canvas -- positive screenings per day.
  * Deliberately not a charting library: this is exactly the "basic
  * Canvas/Compose chart" the brief allowed, so nothing heavier was added.
  */
@@ -23,12 +24,12 @@ class BarChartView @JvmOverloads constructor(
 
     private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#B71C1C") }
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#616161")
+        color = MaterialColors.getColor(context, com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY)
         textAlign = Paint.Align.CENTER
         textSize = 28f
     }
     private val countPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#212121")
+        color = MaterialColors.getColor(context, com.google.android.material.R.attr.colorOnSurface, Color.BLACK)
         textAlign = Paint.Align.CENTER
         textSize = 30f
     }

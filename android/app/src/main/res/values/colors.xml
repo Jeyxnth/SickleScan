@@ -13,6 +13,10 @@
 
     <color name="disclaimer_gray">#616161</color>
 
+    <!-- Text on the result card, whose background is a fixed light tint in
+         both light and dark mode, so its text must not follow the theme. -->
+    <color name="result_text_dark">#212121</color>
+
     <!-- Kept for compatibility with any remaining references. -->
     <color name="positive_red">@color/status_positive</color>
     <color name="negative_green">@color/status_negative</color>
