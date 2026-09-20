@@ -1,10 +1,50 @@
-# SickleScan Android app — Phase 2 + 3 + 4
+# SickleScan Android app — Phase 2 + 3 + 4 + 6
 
-Kotlin app that runs the Phase 1 `sicklescan_model.tflite` fully on-device: capture or
-pick a blood smear photo, tap Analyze, get a screening result, confidence %,
-referral guidance, and the disclaimer — never a diagnosis. Every screening
-is logged locally (Room) and can be reviewed as aggregate stats on a
+Kotlin app that runs on-device models fully offline: capture or pick a
+blood smear photo, choose which condition to screen for, tap Analyze, get
+a screening result, confidence %, referral guidance, and the disclaimer —
+never a diagnosis. Every screening is logged locally (Room, tagged with
+which disease it was for) and can be reviewed as aggregate stats on a
 Dashboard tab, or exported as CSV.
+
+## Phase 6 additions (multi-disease: sickle cell + malaria)
+
+Thalassemia is explicitly **out of scope** for this app: no lab-confirmed
+public dataset was found at a usable size/quality (see the Phase 5 research
+notes) -- it's not in the code, the UI, or the CSV schema.
+
+- **Two bundled models**: `sicklescan_model.tflite` (unchanged) and the new
+  `malaria_model.tflite` + `malaria_labels.txt`, trained in Phase 5 on the
+  NIH/NLM LHNCBC Malaria Cell Images dataset (27,558 images) -- see
+  `/model_output/malaria/malaria_results.md` and `/model_output/comparison.md`
+  for full results (96.30% accuracy, 94.34% sensitivity, 98.26% specificity).
+- **`Disease.kt`**: the set of conditions the app can screen for, each with
+  its own model asset, labels asset, and Room storage key. `ImageClassifier`
+  now takes a `Disease` and loads that model's actual input tensor shape at
+  runtime -- not assumed to match sickle cell's just because both happen to
+  be 224x224.
+- **Disease selector**: a two-button toggle at the top of the capture screen
+  ("Sickle Cell" / "Malaria"). No auto-detection of which disease an image
+  is for -- that's a different, harder problem, out of scope here. Switching
+  disease clears any result on screen, since a verdict for one disease
+  doesn't apply to another.
+- **Per-disease referral threshold, not copy-pasted**: malaria's 65%
+  borderline ceiling was independently validated against its own test-set
+  confidence distribution (58.4% accuracy below 65% confidence vs. 97.4%
+  at/above it, only 2.7% of test images in the low-confidence band) --
+  landing on the same number as sickle cell is a coincidence of the data,
+  documented in `ScreeningInterpreter.kt` and `malaria_results.md`, not an
+  assumption that one model's threshold transfers to another's.
+- **Per-disease dashboard, not blended**: mixing sickle cell and malaria
+  positives into one "% positive" figure would be actively misleading once
+  the app screens for more than one condition, so `DashboardAggregator` now
+  computes stats (`DiseaseStats`) separately per disease, and the Dashboard
+  tab shows two sections. The CSV export gained a `disease` column.
+- **Room schema bump** (v1 -> v2, `ScreeningRecord.disease`): uses
+  `fallbackToDestructiveMigration()` since there are no shipped users yet --
+  flagged in `AppDatabase.kt` as needing a real `Migration` before any real
+  release.
+- Still fully offline: no new permissions.
 
 ## Phase 4 additions
 
@@ -14,7 +54,7 @@ Dashboard tab, or exported as CSV.
   `data/ScreeningRecord.kt` / `ScreeningDao.kt` / `AppDatabase.kt`.
 - **Dashboard tab** (bottom nav, separate from the capture flow):
   total screenings, % positive/negative/borderline, referral count, and a
-  screenings-per-day bar chart for the last 7 days. All aggregation logic
+  positive-screenings-per-day bar chart for the last 7 days. All aggregation logic
   lives in `DashboardAggregator.kt` — pure Kotlin, no Room/Android
   dependency, so it's genuinely unit-tested here (4 passing tests).
 - **Bar chart**: a small custom `View` (`BarChartView.kt`) drawn directly
@@ -106,6 +146,20 @@ Running the instrumented test above is the one remaining step to confirm
 the real on-device native-inference path end to end — it should take a
 couple of minutes on any connected device or emulator.
 
+## Verifying the malaria model (Phase 6)
+
+Same approach, same environment limitation: `MalariaClassifierInstrumentedTest.kt`
+runs `ImageClassifier(context, Disease.MALARIA)` against 8 test images
+under `app/src/androidTest/assets/malaria_test_images/`, checked against
+predictions independently verified in Python against the actual
+`.tflite` file. One of the 8 (`parasitized_misclassified.png`) is a real
+model error (predicts uninfected for a truly parasitized cell) kept
+deliberately rather than cherry-picked away — the test asserts against
+what the model actually predicts, so it verifies the Kotlin
+implementation faithfully reproduces the model's real behavior, errors
+included, not that the model is always right. Same limitation as
+above: build-verified here, not run on a device.
+
 ## Verifying the log/dashboard/CSV (Phase 4)
 
 Room's SQLite backing also only runs under the real Android runtime, not a
@@ -121,21 +175,22 @@ pipeline the app uses, and prints the resulting CSV. Run it yourself with:
 ```
 
 Result from the last run (9 positive, 2 negative, 0 borderline — none of
-these 11 real images happen to land in the 50-65% borderline band):
+these 11 real images happen to land in the 50-65% borderline band). CSV
+now includes the `disease` column added in Phase 6:
 
 ```
-timestamp,result,confidence_percent,referral_flag
-2026-09-14T11:01:48,positive,99.1,yes
-2026-09-14T11:01:48,negative,98.2,no
-2026-09-15T11:01:48,positive,96.5,yes
-2026-09-15T11:01:48,positive,99.8,yes
-2026-09-15T11:01:48,positive,100.0,yes
-2026-09-16T11:01:48,positive,99.3,yes
-2026-09-16T11:01:48,positive,99.1,yes
-2026-09-16T11:01:48,negative,87.5,no
-2026-09-17T11:01:48,positive,98.5,yes
-2026-09-17T11:01:48,positive,97.9,yes
-2026-09-17T11:01:48,positive,72.6,yes
+timestamp,disease,result,confidence_percent,referral_flag
+2026-09-17T18:54:01,sickle_cell,positive,99.1,yes
+2026-09-17T18:54:01,sickle_cell,negative,98.2,no
+2026-09-18T18:54:01,sickle_cell,positive,96.5,yes
+2026-09-18T18:54:01,sickle_cell,positive,99.8,yes
+2026-09-18T18:54:01,sickle_cell,positive,100.0,yes
+2026-09-19T18:54:01,sickle_cell,positive,99.3,yes
+2026-09-19T18:54:01,sickle_cell,positive,99.1,yes
+2026-09-19T18:54:01,sickle_cell,negative,87.5,no
+2026-09-20T18:54:01,sickle_cell,positive,98.5,yes
+2026-09-20T18:54:01,sickle_cell,positive,97.9,yes
+2026-09-20T18:54:01,sickle_cell,positive,72.6,yes
 
 total=11 positive=9 negative=2 borderline=0 referrals=9
 positive%=81.8 negative%=18.2
@@ -150,9 +205,11 @@ Export CSV.
 
 ## Notes
 
-- TFLite input tensor was inspected directly (not assumed): float32,
-  shape `[1, 224, 224, 3]`, no built-in quantization — matches
-  `ImageClassifier.kt`'s preprocessing.
+- TFLite input tensor is read from each model at load time (not
+  hardcoded/assumed): both the sickle cell and malaria models happen to be
+  float32, `[1, 224, 224, 3]`, no built-in quantization, since both were
+  trained with the identical Phase 1/5 pipeline — but `ImageClassifier`
+  doesn't assume that; it asks the interpreter.
 - No `INTERNET` permission is declared; nothing in the app makes network
   calls.
 - Gallery picking uses the system Photo Picker

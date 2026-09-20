@@ -22,11 +22,13 @@ object CsvExporter {
 
     fun toCsv(records: List<ScreeningRecord>): String {
         val builder = StringBuilder()
-        builder.append("timestamp,result,confidence_percent,referral_flag\n")
+        builder.append("timestamp,disease,result,confidence_percent,referral_flag\n")
         // Exported oldest-first, since that's the natural reading order for
-        // a log a coordinator would scan top to bottom.
+        // a coordinator would scan top to bottom.
         records.sortedBy { it.timestampMillis }.forEach { record ->
             builder.append(escapeCsv(TIMESTAMP_FORMAT.format(record.timestampMillis)))
+            builder.append(',')
+            builder.append(escapeCsv(record.disease))
             builder.append(',')
             builder.append(escapeCsv(record.result))
             builder.append(',')

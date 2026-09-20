@@ -12,15 +12,17 @@ import org.tensorflow.lite.support.image.ops.ResizeOp
 import java.io.IOException
 
 /**
- * Wraps the SickleScan TFLite model. Preprocessing here must match training
- * exactly: images were resized to the model's expected input size with
- * bilinear interpolation, then scaled from [0,255] to [-1,1] via
- * `(pixel - 127.5) / 127.5` (this is Keras' `mobilenet_v2.preprocess_input`,
- * mode "tf"). The model's actual input tensor shape/dtype (float32,
- * [1, 224, 224, 3], no built-in quantization) was inspected directly with
- * the TFLite Python interpreter before writing this — not assumed.
+ * Wraps one disease's TFLite model (see [Disease] for the bundled set).
+ * Preprocessing here must match training exactly: images were resized to
+ * the model's expected input size with bilinear interpolation, then scaled
+ * from [0,255] to [-1,1] via `(pixel - 127.5) / 127.5` (this is Keras'
+ * `mobilenet_v2.preprocess_input`, mode "tf") -- true for both the sickle
+ * cell and malaria models, since both were trained with the identical
+ * pipeline. Each model's actual input tensor shape/dtype is inspected at
+ * load time from the model itself, not assumed to be [1,224,224,3] just
+ * because that's what it was for sickle cell.
  */
-class ImageClassifier(context: Context) {
+class ImageClassifier(context: Context, val disease: Disease) {
 
     class ClassifierException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
@@ -32,9 +34,9 @@ class ImageClassifier(context: Context) {
 
     init {
         try {
-            val modelBuffer = FileUtil.loadMappedFile(context, MODEL_FILENAME)
+            val modelBuffer = FileUtil.loadMappedFile(context, disease.modelAsset)
             interpreter = Interpreter(modelBuffer)
-            labels = FileUtil.loadLabels(context, LABELS_FILENAME)
+            labels = FileUtil.loadLabels(context, disease.labelsAsset)
 
             val inputShape = interpreter.getInputTensor(0).shape() // [1, height, width, 3]
             inputHeight = inputShape[1]
@@ -51,7 +53,7 @@ class ImageClassifier(context: Context) {
         }
 
         if (labels.size != 2) {
-            throw ClassifierException("Expected 2 labels in $LABELS_FILENAME, found ${labels.size}")
+            throw ClassifierException("Expected 2 labels in ${disease.labelsAsset}, found ${labels.size}")
         }
     }
 
@@ -90,9 +92,6 @@ class ImageClassifier(context: Context) {
     }
 
     companion object {
-        private const val MODEL_FILENAME = "sicklescan_model.tflite"
-        private const val LABELS_FILENAME = "labels.txt"
-
         // (x - 127.5) / 127.5 maps [0,255] -> [-1,1], matching
         // tf.keras.applications.mobilenet_v2.preprocess_input used in training.
         private const val NORMALIZE_MEAN = 127.5f

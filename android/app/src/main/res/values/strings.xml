@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">SickleScan</string>
 
+    <string name="screening_for_label">Screening for</string>
     <string name="take_photo">Take Photo</string>
     <string name="choose_from_gallery">Choose from Gallery</string>
     <string name="analyze">Analyze</string>
@@ -24,11 +25,15 @@
 
     <string name="dashboard_title">Dashboard</string>
     <string name="dashboard_local_note">This data is local to this device only — it reflects this phone\'s screening activity, not a synced multi-worker view.</string>
-    <string name="dashboard_total_format">Total screenings: %1$d</string>
-    <string name="dashboard_breakdown_format">Positive %1$.0f%% · Negative %2$.0f%% · Borderline %3$.0f%%</string>
+    <string name="dashboard_total_format">Total screenings (all conditions): %1$d</string>
+    <string name="dashboard_breakdown_format">%1$d screenings — Positive %2$.0f%% · Negative %3$.0f%% · Borderline %4$.0f%%</string>
     <string name="dashboard_referral_format">Flagged for lab confirmation: %1$d</string>
-    <string name="dashboard_trend_title">Screenings per day (last 7 days)</string>
+    <string name="dashboard_disease_empty">No screenings for this condition yet.</string>
+    <string name="dashboard_trend_title">Positive screenings per day (last 7 days)</string>
     <string name="dashboard_empty">No screenings logged yet. Results are recorded automatically after each analysis.</string>
+
+    <string name="disease_sickle_cell">Sickle Cell</string>
+    <string name="disease_malaria">Malaria</string>
     <string name="export_csv">Export CSV</string>
     <string name="export_empty">Nothing to export yet — run a screening first.</string>
     <string name="export_failed">Couldn\'t export the CSV file. Please try again.</string>

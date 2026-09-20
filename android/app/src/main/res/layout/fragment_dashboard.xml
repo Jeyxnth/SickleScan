@@ -21,10 +21,17 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="4dp"
             android:text="@string/dashboard_local_note"
             android:textStyle="italic"
             android:textColor="@color/disclaimer_gray" />
+
+        <TextView
+            android:id="@+id/totalText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
 
         <TextView
             android:id="@+id/emptyText"
@@ -42,10 +49,18 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Sickle Cell section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/disease_sickle_cell"
+                android:textAppearance="?attr/textAppearanceTitleMedium" />
+
             <com.google.android.material.card.MaterialCardView
                 style="?attr/materialCardViewOutlinedStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 app:cardCornerRadius="12dp">
 
                 <LinearLayout
@@ -55,40 +70,115 @@
                     android:padding="16dp">
 
                     <TextView
-                        android:id="@+id/totalText"
+                        android:id="@+id/scEmptyText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceTitleMedium" />
+                        android:text="@string/dashboard_disease_empty"
+                        android:textColor="@color/disclaimer_gray" />
 
-                    <TextView
-                        android:id="@+id/breakdownText"
+                    <LinearLayout
+                        android:id="@+id/scStatsGroup"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textAppearance="?attr/textAppearanceBodyLarge" />
+                        android:orientation="vertical"
+                        android:visibility="gone">
 
-                    <TextView
-                        android:id="@+id/referralText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textAppearance="?attr/textAppearanceBodyLarge"
-                        android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/scBreakdownText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+                        <TextView
+                            android:id="@+id/scReferralText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/dashboard_trend_title"
+                            android:textAppearance="?attr/textAppearanceLabelMedium"
+                            android:textColor="@color/disclaimer_gray" />
+
+                        <com.sicklescan.app.BarChartView
+                            android:id="@+id/scBarChart"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp" />
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Malaria section -->
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="@string/dashboard_trend_title"
+                android:text="@string/disease_malaria"
                 android:textAppearance="?attr/textAppearanceTitleMedium" />
 
-            <com.sicklescan.app.BarChartView
-                android:id="@+id/barChart"
+            <com.google.android.material.card.MaterialCardView
+                style="?attr/materialCardViewOutlinedStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="8dp"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/malEmptyText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/dashboard_disease_empty"
+                        android:textColor="@color/disclaimer_gray" />
+
+                    <LinearLayout
+                        android:id="@+id/malStatsGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/malBreakdownText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+                        <TextView
+                            android:id="@+id/malReferralText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/dashboard_trend_title"
+                            android:textAppearance="?attr/textAppearanceLabelMedium"
+                            android:textColor="@color/disclaimer_gray" />
+
+                        <com.sicklescan.app.BarChartView
+                            android:id="@+id/malBarChart"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnExportCsv"

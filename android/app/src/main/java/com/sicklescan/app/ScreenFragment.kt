@@ -26,16 +26,23 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 
 /**
- * The main capture -> classify -> result flow (was MainActivity's whole
- * job before Phase 4 added the Dashboard tab).
+ * The main capture -> select disease -> classify -> result flow. Two
+ * models are bundled (see [Disease]); the user picks which one to run
+ * before analyzing -- there's no attempt to auto-detect which disease an
+ * image is for for, that's a different, harder problem and out of scope.
  */
 class ScreenFragment : Fragment() {
 
     private var _binding: FragmentScreenBinding? = null
     private val binding get() = _binding!!
 
-    private var classifier: ImageClassifier? = null
+    // One classifier per disease, loaded lazily on first use so a load
+    // failure for one model (e.g. a corrupt asset) doesn't block the other.
+    private val classifiers = mutableMapOf<Disease, ImageClassifier>()
+    private val classifierLoadFailed = mutableSetOf<Disease>()
+
     private lateinit var repository: ScreeningRepository
+    private var selectedDisease: Disease = Disease.SICKLE_CELL
     private var selectedBitmap: Bitmap? = null
 
     // --- Activity result launchers ---
@@ -82,12 +89,17 @@ class ScreenFragment : Fragment() {
 
         repository = ScreeningRepository(requireContext())
 
-        try {
-            classifier = ImageClassifier(requireContext())
-        } catch (e: ImageClassifier.ClassifierException) {
-            Log.e(TAG, "Model load failed", e)
-            showError(getString(R.string.error_model_load))
-            binding.btnAnalyze.isEnabled = false
+        binding.diseaseToggle.check(R.id.btnDiseaseSickleCell)
+        binding.diseaseToggle.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            selectedDisease = when (checkedId) {
+                R.id.btnDiseaseMalaria -> Disease.MALARIA
+                else -> Disease.SICKLE_CELL
+            }
+            // A result/referral for one disease doesn't apply to another;
+            // clear it rather than leave a stale verdict on screen.
+            clearResult()
+            updateAnalyzeEnabled()
         }
 
         binding.btnTakePhoto.setOnClickListener { onTakePhotoClicked() }
@@ -102,7 +114,22 @@ class ScreenFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        classifier?.close()
+        classifiers.values.forEach { it.close() }
+    }
+
+    /** Lazily loads (and caches) the classifier for [disease]. Returns null,
+     * having shown an error, if that specific model fails to load -- this
+     * never crashes and never blocks the other disease's model. */
+    private fun getClassifier(disease: Disease): ImageClassifier? {
+        classifiers[disease]?.let { return it }
+        if (disease in classifierLoadFailed) return null
+        return try {
+            ImageClassifier(requireContext(), disease).also { classifiers[disease] = it }
+        } catch (e: ImageClassifier.ClassifierException) {
+            Log.e(TAG, "Model load failed for $disease", e)
+            classifierLoadFailed += disease
+            null
+        }
     }
 
     // --- Button handlers ---
@@ -135,7 +162,8 @@ class ScreenFragment : Fragment() {
 
     private fun onAnalyzeClicked() {
         val bitmap = selectedBitmap
-        val activeClassifier = classifier
+        val disease = selectedDisease
+        val activeClassifier = getClassifier(disease)
 
         if (bitmap == null) {
             showError(getString(R.string.error_no_image))
@@ -164,13 +192,14 @@ class ScreenFragment : Fragment() {
                 val minVisibleMs = 400L
                 if (elapsedMs < minVisibleMs) delay(minVisibleMs - elapsedMs)
 
-                val result = ScreeningInterpreter.interpret(probability)
+                val result = ScreeningInterpreter.interpret(disease, probability)
                 showResult(result)
 
-                // Log every screening to the local device log. No image is
-                // stored -- only the result, confidence, and referral flag.
+                // Log every screening to the local device log, tagged with
+                // which disease it was for. No image is ever stored.
                 withContext(Dispatchers.IO) {
                     repository.logScreening(
+                        disease = disease,
                         result = result.status.name.lowercase(),
                         confidencePercent = result.confidencePercent,
                         referralFlag = result.status != ScreeningInterpreter.Status.NEGATIVE,
@@ -214,7 +243,7 @@ class ScreenFragment : Fragment() {
                 selectedBitmap = bitmap
                 binding.imagePreview.setImageBitmap(bitmap)
                 binding.noImageText.visibility = View.GONE
-                binding.btnAnalyze.isEnabled = classifier != null
+                updateAnalyzeEnabled()
             }
         } catch (e: IOException) {
             Log.e(TAG, "Failed to read image", e)
@@ -223,6 +252,10 @@ class ScreenFragment : Fragment() {
             Log.e(TAG, "Image too large to decode", e)
             showError(getString(R.string.error_corrupt_image))
         }
+    }
+
+    private fun updateAnalyzeEnabled() {
+        binding.btnAnalyze.isEnabled = selectedBitmap != null
     }
 
     private fun showResult(result: ScreeningInterpreter.ScreeningResult) {
@@ -269,6 +302,7 @@ class ScreenFragment : Fragment() {
         binding.btnAnalyze.isEnabled = !busy && selectedBitmap != null
         binding.btnTakePhoto.isEnabled = !busy
         binding.btnChooseGallery.isEnabled = !busy
+        binding.diseaseToggle.isEnabled = !busy
     }
 
     companion object {

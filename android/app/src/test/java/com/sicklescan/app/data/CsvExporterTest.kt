@@ -9,19 +9,21 @@ class CsvExporterTest {
     @Test
     fun `header is always present, even for an empty log`() {
         val csv = CsvExporter.toCsv(emptyList())
-        assertEquals("timestamp,result,confidence_percent,referral_flag\n", csv)
+        assertEquals("timestamp,disease,result,confidence_percent,referral_flag\n", csv)
     }
 
     @Test
-    fun `rows are exported oldest first with one row per record`() {
+    fun `rows are exported oldest first with one row per record, disease included`() {
         val older = ScreeningRecord(
             timestampMillis = 1_000_000L,
+            disease = "sickle_cell",
             result = "negative",
             confidencePercent = 88.4f,
             referralFlag = false,
         )
         val newer = ScreeningRecord(
             timestampMillis = 2_000_000L,
+            disease = "malaria",
             result = "positive",
             confidencePercent = 91.25f,
             referralFlag = true,
@@ -31,10 +33,12 @@ class CsvExporterTest {
         val lines = csv.trim().split("\n")
 
         assertEquals(3, lines.size) // header + 2 rows
-        assertTrue("older record should come first", lines[1].contains("negative"))
+        assertTrue("older record should come first", lines[1].contains("sickle_cell"))
+        assertTrue(lines[1].contains("negative"))
         assertTrue(lines[1].contains("88.4"))
         assertTrue(lines[1].endsWith(",no"))
-        assertTrue("newer record should come second", lines[2].contains("positive"))
+        assertTrue("newer record should come second", lines[2].contains("malaria"))
+        assertTrue(lines[2].contains("positive"))
         assertTrue(lines[2].contains("91.3")) // rounded to 1 decimal
         assertTrue(lines[2].endsWith(",yes"))
     }
@@ -43,6 +47,7 @@ class CsvExporterTest {
     fun `values containing commas are quoted`() {
         val record = ScreeningRecord(
             timestampMillis = 1_000_000L,
+            disease = "sickle_cell",
             result = "positive, confirmed",
             confidencePercent = 90f,
             referralFlag = true,

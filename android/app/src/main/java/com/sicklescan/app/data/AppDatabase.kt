@@ -5,7 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [ScreeningRecord::class], version = 1, exportSchema = false)
+// v2 added ScreeningRecord.disease (multi-disease support, Phase 6). The
+// app has no shipped users/backward-compat requirement yet, so this uses
+// a destructive fallback rather than a real Migration -- acceptable
+// pre-release; revisit with a proper Migration before any real release.
+@Database(entities = [ScreeningRecord::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun screeningDao(): ScreeningDao
 
@@ -19,7 +23,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "sicklescan.db"
-                ).build().also { instance = it }
+                )
+                    .fallbackToDestructiveMigration()
+                    .build().also { instance = it }
             }
     }
 }

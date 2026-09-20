@@ -11,6 +11,8 @@ import androidx.room.PrimaryKey
 data class ScreeningRecord(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val timestampMillis: Long,
+    /** Disease.storageKey, e.g. "sickle_cell" / "malaria" -- which model produced this. */
+    val disease: String,
     /** "positive" / "borderline" / "negative" -- matches ScreeningInterpreter.Status. */
     val result: String,
     val confidencePercent: Float,

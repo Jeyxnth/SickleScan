@@ -19,6 +19,39 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/screening_for_label"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="@color/disclaimer_gray" />
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/diseaseToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDiseaseSickleCell"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/disease_sickle_cell" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDiseaseMalaria"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/disease_malaria" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
         <com.google.android.material.card.MaterialCardView
             style="?attr/materialCardViewOutlinedStyle"
             android:layout_width="match_parent"
@@ -146,7 +179,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:textAppearance="?attr/textAppearanceBodyLarge" />
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="@color/result_text_dark"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/referralMessage"

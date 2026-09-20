@@ -45,7 +45,7 @@ class ImageClassifierInstrumentedTest {
     @Test
     fun matchesKnownPredictions() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val classifier = ImageClassifier(context)
+        val classifier = ImageClassifier(context, Disease.SICKLE_CELL)
 
         try {
             expected.forEach { (fileName, expectedLabel) ->

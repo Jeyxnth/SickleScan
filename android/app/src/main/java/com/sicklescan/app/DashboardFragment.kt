@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sicklescan.app.data.CsvExporter
 import com.sicklescan.app.data.DashboardAggregator
+import com.sicklescan.app.data.DiseaseStats
 import com.sicklescan.app.data.ScreeningRepository
 import com.sicklescan.app.databinding.FragmentDashboardBinding
 import kotlinx.coroutines.Dispatchers
@@ -69,25 +70,51 @@ class DashboardFragment : Fragment() {
 
             if (_binding == null) return@launch // view may be gone by the time this resumes
 
-            if (stats.total == 0) {
+            if (stats.totalAllDiseases == 0) {
                 binding.emptyText.visibility = View.VISIBLE
+                binding.totalText.visibility = View.GONE
                 binding.statsContainer.visibility = View.GONE
                 return@launch
             }
 
             binding.emptyText.visibility = View.GONE
+            binding.totalText.visibility = View.VISIBLE
             binding.statsContainer.visibility = View.VISIBLE
+            binding.totalText.text = getString(R.string.dashboard_total_format, stats.totalAllDiseases)
 
-            binding.totalText.text = getString(R.string.dashboard_total_format, stats.total)
-            binding.breakdownText.text = getString(
-                R.string.dashboard_breakdown_format,
-                stats.positivePercent,
-                stats.negativePercent,
-                stats.borderlinePercent,
-            )
-            binding.referralText.text = getString(R.string.dashboard_referral_format, stats.referralCount)
-            binding.barChart.setData(stats.dailyCounts)
+            val sc = stats.perDisease.first { it.disease == Disease.SICKLE_CELL }
+            bindDiseaseSection(sc, binding.scEmptyText, binding.scStatsGroup, binding.scBreakdownText, binding.scReferralText, binding.scBarChart)
+
+            val mal = stats.perDisease.first { it.disease == Disease.MALARIA }
+            bindDiseaseSection(mal, binding.malEmptyText, binding.malStatsGroup, binding.malBreakdownText, binding.malReferralText, binding.malBarChart)
         }
+    }
+
+    private fun bindDiseaseSection(
+        stats: DiseaseStats,
+        emptyText: android.widget.TextView,
+        statsGroup: View,
+        breakdownText: android.widget.TextView,
+        referralText: android.widget.TextView,
+        barChart: BarChartView,
+    ) {
+        if (stats.total == 0) {
+            emptyText.visibility = View.VISIBLE
+            statsGroup.visibility = View.GONE
+            return
+        }
+        emptyText.visibility = View.GONE
+        statsGroup.visibility = View.VISIBLE
+
+        breakdownText.text = getString(
+            R.string.dashboard_breakdown_format,
+            stats.total,
+            stats.positivePercent,
+            stats.negativePercent,
+            stats.borderlinePercent,
+        )
+        referralText.text = getString(R.string.dashboard_referral_format, stats.referralCount)
+        barChart.setData(stats.dailyCounts)
     }
 
     private fun onExportClicked() {
