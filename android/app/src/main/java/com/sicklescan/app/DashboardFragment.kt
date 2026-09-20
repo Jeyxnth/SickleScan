@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sicklescan.app.data.CsvExporter
 import com.sicklescan.app.data.DashboardAggregator
+import com.sicklescan.app.data.GuardrailAggregator
 import com.sicklescan.app.data.DiseaseStats
 import com.sicklescan.app.data.ScreeningRepository
 import com.sicklescan.app.databinding.FragmentDashboardBinding
@@ -66,9 +67,21 @@ class DashboardFragment : Fragment() {
     private fun refresh() {
         viewLifecycleOwner.lifecycleScope.launch {
             val records = withContext(Dispatchers.IO) { repository.getAllRecords() }
+            val guardrailEvents = withContext(Dispatchers.IO) { repository.getGuardrailEvents() }
             val stats = DashboardAggregator.compute(records)
+            // Guardrail rejections are reported on their own, never folded into the disease stats.
+            val guardrail = GuardrailAggregator.compute(acceptedScreenings = records.size, events = guardrailEvents)
 
             if (_binding == null) return@launch // view may be gone by the time this resumes
+
+            binding.guardrailStatsText.text = if (guardrail.checks == 0) {
+                getString(R.string.dashboard_guardrail_empty)
+            } else {
+                getString(
+                    R.string.dashboard_guardrail_format,
+                    guardrail.rejections, guardrail.checks, guardrail.rejectionPercent, guardrail.overrides,
+                )
+            }
 
             if (stats.totalAllDiseases == 0) {
                 binding.emptyText.visibility = View.VISIBLE

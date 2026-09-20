@@ -38,4 +38,13 @@
     <string name="export_empty">Nothing to export yet — run a screening first.</string>
     <string name="export_failed">Couldn\'t export the CSV file. Please try again.</string>
     <string name="export_chooser_title">Share screening log</string>
+
+    <string name="guardrail_reject_message">This doesn\'t look like a blood smear photo. Please retake through the microscope attachment.</string>
+    <string name="guardrail_retake">Retake photo</string>
+    <string name="guardrail_analyze_anyway">Analyze anyway</string>
+    <string name="guardrail_override_caveat">The image check flagged this photo as not looking like a blood smear. Treat this result with caution — it is not included in the dashboard screening stats.</string>
+    <string name="dashboard_guardrail_title">Image check (guardrail)</string>
+    <string name="dashboard_guardrail_note">Photos that didn\'t look like a blood smear. Counted separately from screening results above.</string>
+    <string name="dashboard_guardrail_format">%1$d of %2$d image checks rejected (%3$.1f%%) · %4$d analyzed anyway</string>
+    <string name="dashboard_guardrail_empty">No image checks logged yet.</string>
 </resources>

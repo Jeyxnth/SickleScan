@@ -140,6 +140,46 @@
             android:visibility="gone" />
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/guardrailContainer"
+            style="?attr/materialCardViewOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="12dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/guardrailMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/guardrail_reject_message"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="@color/status_borderline" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGuardrailRetake"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/guardrail_retake" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGuardrailAnyway"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/guardrail_analyze_anyway" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/resultContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -190,6 +230,16 @@
                     android:layout_marginTop="8dp"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overrideCaveat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/guardrail_override_caveat"
+                    android:textColor="@color/result_text_dark"
+                    android:textStyle="italic"
+                    android:visibility="gone" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

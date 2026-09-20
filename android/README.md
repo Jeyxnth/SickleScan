@@ -1,4 +1,4 @@
-# SickleScan Android app — Phase 2 + 3 + 4 + 6
+# SickleScan Android app — Phase 2 + 3 + 4 + 6 + 7
 
 Kotlin app that runs on-device models fully offline: capture or pick a
 blood smear photo, choose which condition to screen for, tap Analyze, get
@@ -6,6 +6,25 @@ a screening result, confidence %, referral guidance, and the disclaimer —
 never a diagnosis. Every screening is logged locally (Room, tagged with
 which disease it was for) and can be reviewed as aggregate stats on a
 Dashboard tab, or exported as CSV.
+
+## Phase 7 additions (guardrail: reject non-smear images)
+
+- **Pipeline**: capture -> preprocess -> **guardrail check** -> (smear-like) disease
+  classifier -> result, or (not smear-like) -> warning. `guardrail_model.tflite`
+  (float16, 4.7 MB) runs first via the same `ImageClassifier`; see
+  `/model_output/guardrail/guardrail_results.md` for numbers and limits. It detects
+  "matches the smear-like training distribution", NOT "blood smear vs other microscopy".
+- **UX = soft warning** (a judgment call, chosen by the project owner): the message
+  "This doesn't look like a blood smear photo. Please retake through the microscope
+  attachment." with **Retake photo** as the main action and a smaller **Analyze
+  anyway**. Reason: the guardrail's real-world false-reject rate is unknown, so a hard
+  block could strand a legitimate-but-unusual photo. An overridden result shows a
+  persistent caveat and is **not** logged as a disease screening.
+- **Separate logging**: rejections go to their own Room table (`guardrail_events`,
+  DB v3), never into disease stats. The Dashboard has an "Image check" section showing
+  rejections / checks, rate, and how many were analyzed anyway.
+- Threshold 0.5 is un-validated (the model's outputs are almost all 0 or 1) -- see results.
+- `GuardrailClassifierInstrumentedTest` is build-verified only (no device available).
 
 ## Phase 6 additions (multi-disease: sickle cell + malaria)
 

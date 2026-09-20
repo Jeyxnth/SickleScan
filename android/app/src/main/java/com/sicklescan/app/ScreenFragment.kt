@@ -41,6 +41,13 @@ class ScreenFragment : Fragment() {
     private val classifiers = mutableMapOf<Disease, ImageClassifier>()
     private val classifierLoadFailed = mutableSetOf<Disease>()
 
+    // Phase 7 guardrail: runs before any disease model. Lazily loaded like the others.
+    private var guardrail: ImageClassifier? = null
+    private var guardrailLoadFailed = false
+
+    // Row id of the guardrail rejection currently on screen, so "Analyze anyway" can mark it overridden.
+    private var pendingRejectionId: Long? = null
+
     private lateinit var repository: ScreeningRepository
     private var selectedDisease: Disease = Disease.SICKLE_CELL
     private var selectedBitmap: Bitmap? = null
@@ -105,6 +112,8 @@ class ScreenFragment : Fragment() {
         binding.btnTakePhoto.setOnClickListener { onTakePhotoClicked() }
         binding.btnChooseGallery.setOnClickListener { onChooseGalleryClicked() }
         binding.btnAnalyze.setOnClickListener { onAnalyzeClicked() }
+        binding.btnGuardrailRetake.setOnClickListener { onTakePhotoClicked() }
+        binding.btnGuardrailAnyway.setOnClickListener { onAnalyzeAnywayClicked() }
     }
 
     override fun onDestroyView() {
@@ -115,6 +124,7 @@ class ScreenFragment : Fragment() {
     override fun onDestroy() {
         super.onDestroy()
         classifiers.values.forEach { it.close() }
+        guardrail?.close()
     }
 
     /** Lazily loads (and caches) the classifier for [disease]. Returns null,
@@ -128,6 +138,18 @@ class ScreenFragment : Fragment() {
         } catch (e: ImageClassifier.ClassifierException) {
             Log.e(TAG, "Model load failed for $disease", e)
             classifierLoadFailed += disease
+            null
+        }
+    }
+
+    private fun getGuardrail(): ImageClassifier? {
+        guardrail?.let { return it }
+        if (guardrailLoadFailed) return null
+        return try {
+            ImageClassifier(requireContext(), GUARDRAIL_MODEL_ASSET, GUARDRAIL_LABELS_ASSET).also { guardrail = it }
+        } catch (e: ImageClassifier.ClassifierException) {
+            Log.e(TAG, "Guardrail model load failed", e)
+            guardrailLoadFailed = true
             null
         }
     }
@@ -160,16 +182,18 @@ class ScreenFragment : Fragment() {
         }
     }
 
+    /** Capture -> preprocess -> GUARDRAIL check -> (if smear-like) disease classifier -> result,
+     * or (if not smear-like) -> warning with Retake / Analyze anyway. */
     private fun onAnalyzeClicked() {
         val bitmap = selectedBitmap
         val disease = selectedDisease
-        val activeClassifier = getClassifier(disease)
 
         if (bitmap == null) {
             showError(getString(R.string.error_no_image))
             return
         }
-        if (activeClassifier == null) {
+        val guard = getGuardrail()
+        if (guard == null || getClassifier(disease) == null) {
             showError(getString(R.string.error_model_load))
             return
         }
@@ -177,39 +201,79 @@ class ScreenFragment : Fragment() {
         clearResult()
         setBusy(true)
 
-        // Run inference off the main thread so the loading state is always
-        // visibly shown, never a frozen-looking UI, even though inference
-        // itself typically takes well under a second on this small model.
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val (probability, elapsedMs) = withContext(Dispatchers.Default) {
-                    val start = System.currentTimeMillis()
-                    val p = activeClassifier.classify(bitmap)
-                    p to (System.currentTimeMillis() - start)
+                val smearProbability = withContext(Dispatchers.Default) { guard.classify(bitmap) }
+                if (!GuardrailInterpreter.looksLikeSmear(smearProbability)) {
+                    // Rejected BEFORE the disease model runs. Logged in its own table.
+                    pendingRejectionId = withContext(Dispatchers.IO) {
+                        repository.logGuardrailRejection(disease, smearProbability)
+                    }
+                    showGuardrailWarning()
+                    return@launch
                 }
-                // Keep the loading state visible for a minimum stretch so it
-                // never reads as a flicker on fast devices.
-                val minVisibleMs = 400L
-                if (elapsedMs < minVisibleMs) delay(minVisibleMs - elapsedMs)
-
-                val result = ScreeningInterpreter.interpret(disease, probability)
-                showResult(result)
-
-                // Log every screening to the local device log, tagged with
-                // which disease it was for. No image is ever stored.
-                withContext(Dispatchers.IO) {
-                    repository.logScreening(
-                        disease = disease,
-                        result = result.status.name.lowercase(),
-                        confidencePercent = result.confidencePercent,
-                        referralFlag = result.status != ScreeningInterpreter.Status.NEGATIVE,
-                    )
-                }
+                runDiseaseAnalysis(bitmap, disease, overridden = false)
             } catch (e: ImageClassifier.ClassifierException) {
                 Log.e(TAG, "Inference failed", e)
                 showError(getString(R.string.error_inference))
             } finally {
                 setBusy(false)
+            }
+        }
+    }
+
+    /** Soft-warning path: the user chose to analyze despite the guardrail. The result is shown
+     * with a persistent caveat and is NOT logged as a disease screening (so it can't skew stats);
+     * the rejection row is marked overridden instead. */
+    private fun onAnalyzeAnywayClicked() {
+        val bitmap = selectedBitmap ?: return
+        val disease = selectedDisease
+        val rejectionId = pendingRejectionId
+
+        clearResult()
+        setBusy(true)
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                if (rejectionId != null) withContext(Dispatchers.IO) { repository.markGuardrailOverridden(rejectionId) }
+                pendingRejectionId = null
+                runDiseaseAnalysis(bitmap, disease, overridden = true)
+            } catch (e: ImageClassifier.ClassifierException) {
+                Log.e(TAG, "Inference failed", e)
+                showError(getString(R.string.error_inference))
+            } finally {
+                setBusy(false)
+            }
+        }
+    }
+
+    private suspend fun runDiseaseAnalysis(bitmap: Bitmap, disease: Disease, overridden: Boolean) {
+        val classifier = getClassifier(disease)
+        if (classifier == null) {
+            showError(getString(R.string.error_model_load))
+            return
+        }
+        // Inference runs off the main thread so the loading state is always visibly shown.
+        val (probability, elapsedMs) = withContext(Dispatchers.Default) {
+            val start = System.currentTimeMillis()
+            val p = classifier.classify(bitmap)
+            p to (System.currentTimeMillis() - start)
+        }
+        val minVisibleMs = 400L
+        if (elapsedMs < minVisibleMs) delay(minVisibleMs - elapsedMs)
+
+        val result = ScreeningInterpreter.interpret(disease, probability)
+        showResult(result)
+        binding.overrideCaveat.visibility = if (overridden) View.VISIBLE else View.GONE
+
+        if (!overridden) {
+            // Log every guardrail-passed screening, tagged with disease. No image is ever stored.
+            withContext(Dispatchers.IO) {
+                repository.logScreening(
+                    disease = disease,
+                    result = result.status.name.lowercase(),
+                    confidencePercent = result.confidencePercent,
+                    referralFlag = result.status != ScreeningInterpreter.Status.NEGATIVE,
+                )
             }
         }
     }
@@ -287,12 +351,20 @@ class ScreenFragment : Fragment() {
     }
 
     private fun showError(message: String) {
+        binding.guardrailContainer.visibility = View.GONE
         binding.resultContainer.visibility = View.GONE
         binding.errorText.visibility = View.VISIBLE
         binding.errorText.text = message
     }
 
+    private fun showGuardrailWarning() {
+        binding.resultContainer.visibility = View.GONE
+        binding.errorText.visibility = View.GONE
+        binding.guardrailContainer.visibility = View.VISIBLE
+    }
+
     private fun clearResult() {
+        binding.guardrailContainer.visibility = View.GONE
         binding.resultContainer.visibility = View.GONE
         binding.errorText.visibility = View.GONE
     }
@@ -307,5 +379,7 @@ class ScreenFragment : Fragment() {
 
     companion object {
         private const val TAG = "ScreenFragment"
+        private const val GUARDRAIL_MODEL_ASSET = "guardrail_model.tflite"
+        private const val GUARDRAIL_LABELS_ASSET = "guardrail_labels.txt"
     }
 }

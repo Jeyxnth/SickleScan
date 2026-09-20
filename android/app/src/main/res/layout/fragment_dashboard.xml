@@ -188,5 +188,27 @@
                 android:text="@string/export_csv" />
         </LinearLayout>
 
+        <!-- Guardrail rejections: separate from disease stats above -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/dashboard_guardrail_title"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/dashboard_guardrail_note"
+            android:textStyle="italic"
+            android:textColor="@color/disclaimer_gray" />
+
+        <TextView
+            android:id="@+id/guardrailStatsText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
     </LinearLayout>
 </ScrollView>

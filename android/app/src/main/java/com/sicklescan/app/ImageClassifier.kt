@@ -12,7 +12,8 @@ import org.tensorflow.lite.support.image.ops.ResizeOp
 import java.io.IOException
 
 /**
- * Wraps one disease's TFLite model (see [Disease] for the bundled set).
+ * Wraps one bundled TFLite model: a disease classifier (see [Disease]) or the
+ * Phase 7 guardrail (smear / not-smear, see [GuardrailInterpreter]).
  * Preprocessing here must match training exactly: images were resized to
  * the model's expected input size with bilinear interpolation, then scaled
  * from [0,255] to [-1,1] via `(pixel - 127.5) / 127.5` (this is Keras'
@@ -22,7 +23,10 @@ import java.io.IOException
  * load time from the model itself, not assumed to be [1,224,224,3] just
  * because that's what it was for sickle cell.
  */
-class ImageClassifier(context: Context, val disease: Disease) {
+class ImageClassifier(context: Context, private val modelAsset: String, private val labelsAsset: String) {
+
+    /** A disease classifier: loads that [Disease]'s bundled model + labels. */
+    constructor(context: Context, disease: Disease) : this(context, disease.modelAsset, disease.labelsAsset)
 
     class ClassifierException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
@@ -34,9 +38,9 @@ class ImageClassifier(context: Context, val disease: Disease) {
 
     init {
         try {
-            val modelBuffer = FileUtil.loadMappedFile(context, disease.modelAsset)
+            val modelBuffer = FileUtil.loadMappedFile(context, modelAsset)
             interpreter = Interpreter(modelBuffer)
-            labels = FileUtil.loadLabels(context, disease.labelsAsset)
+            labels = FileUtil.loadLabels(context, labelsAsset)
 
             val inputShape = interpreter.getInputTensor(0).shape() // [1, height, width, 3]
             inputHeight = inputShape[1]
@@ -53,7 +57,7 @@ class ImageClassifier(context: Context, val disease: Disease) {
         }
 
         if (labels.size != 2) {
-            throw ClassifierException("Expected 2 labels in ${disease.labelsAsset}, found ${labels.size}")
+            throw ClassifierException("Expected 2 labels in $labelsAsset, found ${labels.size}")
         }
     }
 
