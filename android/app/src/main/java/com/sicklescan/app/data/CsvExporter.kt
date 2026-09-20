@@ -7,12 +7,18 @@ import java.util.TimeZone
 /**
  * Builds the CSV export as a plain string -- pure and file-I/O free, so it's
  * a real, runnable local unit test (see CsvExporterTest). Writing the string
- * to a file and sharing it is separate (MainActivity/DashboardFragment),
- * where it belongs given it needs a Context.
+ * to a file and sharing it is separate (DashboardFragment), where it belongs
+ * given it needs a Context.
+ *
+ * One row per condition screened. Rows from the same photo share a session_id
+ * and timestamp, so two conditions run on one photo are visibly linked, not two
+ * unrelated entries. image_check is "accepted" or "overridden" (the user continued
+ * past the image-check warning; the dashboard excludes those from its stats, but
+ * they are exported so a coordinator can see and filter them).
  *
  * This CSV *is* the integration point with a district/PHC coordinator's
- * system in the current scope -- there is no server to upload to, and this
- * app doesn't pretend otherwise.
+ * system in the current scope -- there is no server to upload to, and
+ * this app doesn't pretend otherwise.
  */
 object CsvExporter {
 
@@ -20,23 +26,32 @@ object CsvExporter {
         timeZone = TimeZone.getDefault()
     }
 
-    fun toCsv(records: List<ScreeningRecord>): String {
+    fun toCsv(sessions: List<CaptureSession>, records: List<ScreeningRecord>): String {
+        val sessionById = sessions.associateBy { it.id }
         val builder = StringBuilder()
-        builder.append("timestamp,disease,result,confidence_percent,referral_flag\n")
-        // Exported oldest-first, since that's the natural reading order for
-        // a coordinator would scan top to bottom.
-        records.sortedBy { it.timestampMillis }.forEach { record ->
-            builder.append(escapeCsv(TIMESTAMP_FORMAT.format(record.timestampMillis)))
-            builder.append(',')
-            builder.append(escapeCsv(record.disease))
-            builder.append(',')
-            builder.append(escapeCsv(record.result))
-            builder.append(',')
-            builder.append(String.format(Locale.US, "%.1f", record.confidencePercent))
-            builder.append(',')
-            builder.append(if (record.referralFlag) "yes" else "no")
-            builder.append('\n')
-        }
+        builder.append("session_id,timestamp,disease,result,confidence_percent,referral_flag,image_check\n")
+        // Oldest session first (ids ascend with time), rows of one session adjacent.
+        // Records with no matching session can't occur (foreign key) and are skipped.
+        records
+            .filter { it.sessionId in sessionById }
+            .sortedWith(compareBy({ sessionById.getValue(it.sessionId).timestampMillis }, { it.sessionId }, { it.disease }))
+            .forEach { record ->
+                val session = sessionById.getValue(record.sessionId)
+                builder.append(record.sessionId)
+                builder.append(',')
+                builder.append(escapeCsv(TIMESTAMP_FORMAT.format(session.timestampMillis)))
+                builder.append(',')
+                builder.append(escapeCsv(record.disease))
+                builder.append(',')
+                builder.append(escapeCsv(record.result))
+                builder.append(',')
+                builder.append(String.format(Locale.US, "%.1f", record.confidencePercent))
+                builder.append(',')
+                builder.append(if (record.referralFlag) "yes" else "no")
+                builder.append(',')
+                builder.append(escapeCsv(session.guardrailResult))
+                builder.append('\n')
+            }
         return builder.toString()
     }
 

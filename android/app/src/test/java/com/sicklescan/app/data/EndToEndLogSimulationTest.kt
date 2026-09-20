@@ -3,24 +3,26 @@ package com.sicklescan.app.data
 import com.sicklescan.app.Disease
 import com.sicklescan.app.ScreeningInterpreter
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Calendar
 
 /**
- * Simulates "run a handful of screenings" end to end using the real raw
- * probabilities already independently verified (in Python, against the
- * actual sicklescan_model.tflite) for the 11 known sample images from
- * Phases 2-3 -- the closest thing to a real device run available in this
- * environment. Exercises the exact
- * ScreeningInterpreter -> ScreeningRecord -> DashboardAggregator ->
- * CsvExporter pipeline the app uses, now with a disease tag on every
- * record, and prints the CSV so it can be inspected by hand.
+ * Simulates "run a handful of sessions" end to end using raw probabilities that
+ * were independently computed in Python by running the ACTUAL bundled .tflite
+ * files (see android/README.md) -- the closest thing to a device run available
+ * here. Exercises the same ScreeningInterpreter -> CaptureSession/ScreeningRecord
+ * -> DashboardAggregator -> CsvExporter pipeline the app uses, and prints the
+ * CSV and dashboard numbers so they can be inspected by hand.
+ *
+ * Includes the Phase 8 case: ONE photo screened for BOTH conditions. The pair
+ * below are real same-image outputs from both disease models
+ * (sickle model, malaria model) for one sample image from each disease's set.
  */
 class EndToEndLogSimulationTest {
 
-    // fileName -> raw positive-class probability from the .tflite model
-    // (verified against the model directly; see android/README.md).
-    private val knownProbabilities = linkedMapOf(
+    // Sickle-cell-only sessions: fileName -> raw positive probability from sicklescan_model.tflite.
+    private val sickleOnly = linkedMapOf(
         "pos_325.jpg" to 0.9849f,
         "pos_231.jpg" to 0.9930f,
         "pos_20.jpg" to 0.9646f,
@@ -34,60 +36,124 @@ class EndToEndLogSimulationTest {
         "pos_393.jpg" to 0.9999f,
     )
 
+    // Both-conditions sessions: ONE image, run through BOTH models (sickle P, malaria P).
+    private val bothConditions = listOf(
+        Triple("pos_20.jpg (sickle set)", 0.9646f, 0.0356f),
+        Triple("parasitized_1.png (malaria set)", 0.8061f, 0.9825f),
+    )
+
+    private fun rec(disease: Disease, p: Float): Rec {
+        val r = ScreeningInterpreter.interpret(disease, p)
+        return Rec(disease.storageKey, r.status.name.lowercase(), r.confidencePercent)
+    }
+
     @Test
-    fun `simulated screening log produces correct per-disease dashboard stats and CSV`() {
+    fun `sessions, per-disease stats and CSV linkage all reconcile`() {
         val now = System.currentTimeMillis()
+        val f = SessionFixture()
         var day = 0
-        val records = knownProbabilities.map { (_, probability) ->
-            val result = ScreeningInterpreter.interpret(Disease.SICKLE_CELL, probability)
-            // Spread across a few days so the trend chart isn't a single spike.
-            val timestamp = Calendar.getInstance().apply {
-                timeInMillis = now
-                add(Calendar.DAY_OF_YEAR, -(day % 4))
-            }.timeInMillis
-            day++
-            ScreeningRecord(
-                timestampMillis = timestamp,
-                disease = Disease.SICKLE_CELL.storageKey,
-                result = result.status.name.lowercase(),
-                confidencePercent = result.confidencePercent,
-                referralFlag = result.status != ScreeningInterpreter.Status.NEGATIVE,
-            )
+        fun ts() = Calendar.getInstance().apply { timeInMillis = now; add(Calendar.DAY_OF_YEAR, -(day++ % 4)) }.timeInMillis
+
+        sickleOnly.values.forEach { p -> f.photo(ts(), rec(Disease.SICKLE_CELL, p)) }
+        bothConditions.forEach { (_, sickleP, malariaP) ->
+            f.photo(ts(), rec(Disease.SICKLE_CELL, sickleP), rec(Disease.MALARIA, malariaP))
         }
+        // One photo the guardrail flagged that the user continued past: saved + exported, excluded from stats.
+        f.photo(ts(), rec(Disease.SICKLE_CELL, 0.99f), guardrail = CaptureSession.GUARDRAIL_OVERRIDDEN)
 
-        // Ground truth from the known probabilities: 9 confidently positive
-        // (>=65% confidence, including pos_21.jpg at 72.56%), 2 confidently
-        // negative, 0 borderline -- none of these 11 real images happen to
-        // land in the 50-65% band.
-        val stats = DashboardAggregator.compute(records, nowMillis = now)
-        assertEquals(11, stats.totalAllDiseases)
+        val stats = DashboardAggregator.compute(f.sessions, f.records, nowMillis = now)
+
+        // 11 sickle-only + 2 both-condition photos = 13 sessions (the overridden one is separate).
+        assertEquals(13, stats.sessionCount)
+        assertEquals(2, stats.bothConditionsSessions)
+        assertEquals(1, stats.overriddenSessionCount)
+        assertEquals(15, stats.conditionChecks) // 11 + 2*2
+        assertEquals(stats.sessionCount + stats.bothConditionsSessions, stats.conditionChecks)
+
         val sc = stats.perDisease.first { it.disease == Disease.SICKLE_CELL }
-        assertEquals(11, sc.total)
-        assertEquals(9, sc.positiveCount)
+        assertEquals(13, sc.total) // 11 + 2 (overridden excluded)
+        assertEquals(11, sc.positiveCount) // 9 of the 11 + both pair photos positive (0.9646, 0.8061)
         assertEquals(2, sc.negativeCount)
-        assertEquals(0, sc.borderlineCount)
-        assertEquals(9, sc.referralCount) // positive only, since none borderline here
-        assertEquals(9, sc.dailyCounts.sumOf { it.count }) // the 9 positives, all within the 7-day window
-        // No malaria screenings logged in this simulation -- confirms they stay at zero, not blended in.
         val mal = stats.perDisease.first { it.disease == Disease.MALARIA }
-        assertEquals(0, mal.total)
+        assertEquals(2, mal.total)
+        assertEquals(1, mal.positiveCount) // parasitized_1
+        assertEquals(1, mal.negativeCount) // pos_20 as seen by the malaria model
+        assertEquals(stats.conditionChecks, stats.perDisease.sumOf { it.total })
 
-        val csv = CsvExporter.toCsv(records)
+        val csv = CsvExporter.toCsv(f.sessions, f.records)
         println("---- Simulated CSV export ----")
         println(csv)
-        println("---- Dashboard stats (sickle cell) ----")
+        println("---- Dashboard ----")
         println(
-            "total=${sc.total} positive=${sc.positiveCount} negative=${sc.negativeCount} " +
-                "borderline=${sc.borderlineCount} referrals=${sc.referralCount} " +
-                "positive%=${sc.positivePercent} negative%=${sc.negativePercent}"
+            "sessions=${stats.sessionCount} both=${stats.bothConditionsSessions} overridden=${stats.overriddenSessionCount} " +
+                "conditionChecks=${stats.conditionChecks} | sickle=${sc.total} malaria=${mal.total}"
         )
 
         val lines = csv.trim().split("\n")
-        assertEquals(1 + 11, lines.size) // header + 11 rows
-        assertEquals("timestamp,disease,result,confidence_percent,referral_flag", lines[0])
-        // 9 positive rows + 2 negative rows, referral_flag "yes" exactly on the positive ones
-        assertEquals(9, lines.drop(1).count { it.contains(",positive,") && it.endsWith(",yes") })
-        assertEquals(2, lines.drop(1).count { it.contains(",negative,") && it.endsWith(",no") })
-        assertEquals(11, lines.drop(1).count { it.contains(",sickle_cell,") })
+        assertEquals("session_id,timestamp,disease,result,confidence_percent,referral_flag,image_check", lines[0])
+        assertEquals(1 + 16, lines.size) // 15 counted rows + 1 overridden row
+        // Session linkage: each both-condition photo yields two rows with the same session_id.
+        val rowsBySession = lines.drop(1).map { it.split(",") }.groupBy { it[0] }
+        assertEquals(2, rowsBySession.values.count { it.size == 2 })
+        rowsBySession.values.filter { it.size == 2 }.forEach { rows ->
+            assertEquals(setOf("sickle_cell", "malaria"), rows.map { it[2] }.toSet())
+            assertEquals("same photo -> same timestamp", rows[0][1], rows[1][1])
+        }
+        assertTrue(lines.drop(1).count { it.endsWith(",overridden") } == 1)
+    }
+
+    /**
+     * Cross-checks the two weekly "positive cases" charts against a hand tally of the raw
+     * simulated results that never touches DashboardAggregator: every result is recorded
+     * as (day offset, disease, status) as it is generated, then tallied independently.
+     */
+    @Test
+    fun `weekly positive-case charts match a hand tally of the raw simulated results`() {
+        val now = System.currentTimeMillis()
+        val f = SessionFixture()
+        val raw = mutableListOf<Triple<Int, String, String>>() // (days ago, disease, status), counted sessions only
+        var n = 0
+
+        fun photo(overridden: Boolean, vararg probs: Pair<Disease, Float>) {
+            val daysAgo = n++ % 4
+            val ts = Calendar.getInstance().apply { timeInMillis = now; add(Calendar.DAY_OF_YEAR, -daysAgo) }.timeInMillis
+            val recs = probs.map { (d, p) -> rec(d, p) }
+            f.photo(
+                ts, *recs.toTypedArray(),
+                guardrail = if (overridden) CaptureSession.GUARDRAIL_OVERRIDDEN else CaptureSession.GUARDRAIL_ACCEPTED,
+            )
+            if (!overridden) recs.forEach { raw += Triple(daysAgo, it.disease, it.result) }
+        }
+
+        // Same data as the 13-session simulation above (+ the overridden positive that must NOT appear).
+        sickleOnly.values.forEach { p -> photo(false, Disease.SICKLE_CELL to p) }
+        bothConditions.forEach { (_, s, m) -> photo(false, Disease.SICKLE_CELL to s, Disease.MALARIA to m) }
+        photo(true, Disease.SICKLE_CELL to 0.99f)
+
+        val stats = DashboardAggregator.compute(f.sessions, f.records, nowMillis = now, windowDays = 7)
+
+        for (disease in Disease.entries) {
+            val chart = stats.perDisease.first { it.disease == disease }.dailyCounts
+            assertEquals(7, chart.size)
+            // Independent expectation: POSITIVE only (not borderline, not negative), this disease only.
+            val expectedByDaysAgo = raw
+                .filter { it.second == disease.storageKey && it.third == "positive" }
+                .groupingBy { it.first }.eachCount()
+            for (daysAgo in 0..6) {
+                assertEquals(
+                    "${disease.displayName}, $daysAgo days ago",
+                    expectedByDaysAgo[daysAgo] ?: 0,
+                    chart[6 - daysAgo].count, // chart is oldest-first, today last
+                )
+            }
+            println("${disease.displayName} — positive cases this week: " + chart.joinToString("  ") { "${it.label}:${it.count}" })
+        }
+
+        val sickleChart = stats.perDisease.first { it.disease == Disease.SICKLE_CELL }.dailyCounts
+        val malariaChart = stats.perDisease.first { it.disease == Disease.MALARIA }.dailyCounts
+        assertEquals("9 positives among the 11 sickle-only + 2 pair photos; overridden one excluded", 11, sickleChart.sumOf { it.count })
+        assertEquals("only parasitized_1 is a malaria positive", 1, malariaChart.sumOf { it.count })
+        // Charts show positives only, so they must be smaller than the totals that include negatives.
+        assertTrue(sickleChart.sumOf { it.count } < stats.perDisease.first { it.disease == Disease.SICKLE_CELL }.total)
     }
 }

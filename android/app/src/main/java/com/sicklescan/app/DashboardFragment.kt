@@ -67,10 +67,11 @@ class DashboardFragment : Fragment() {
     private fun refresh() {
         viewLifecycleOwner.lifecycleScope.launch {
             val records = withContext(Dispatchers.IO) { repository.getAllRecords() }
+            val sessions = withContext(Dispatchers.IO) { repository.getAllSessions() }
             val guardrailEvents = withContext(Dispatchers.IO) { repository.getGuardrailEvents() }
-            val stats = DashboardAggregator.compute(records)
+            val stats = DashboardAggregator.compute(sessions, records)
             // Guardrail rejections are reported on their own, never folded into the disease stats.
-            val guardrail = GuardrailAggregator.compute(acceptedScreenings = records.size, events = guardrailEvents)
+            val guardrail = GuardrailAggregator.compute(acceptedSessions = stats.sessionCount, events = guardrailEvents)
 
             if (_binding == null) return@launch // view may be gone by the time this resumes
 
@@ -83,17 +84,39 @@ class DashboardFragment : Fragment() {
                 )
             }
 
-            if (stats.totalAllDiseases == 0) {
+            if (stats.sessionCount == 0 && stats.overriddenSessionCount == 0) {
                 binding.emptyText.visibility = View.VISIBLE
                 binding.totalText.visibility = View.GONE
+                binding.sessionsDetailText.visibility = View.GONE
                 binding.statsContainer.visibility = View.GONE
                 return@launch
             }
 
             binding.emptyText.visibility = View.GONE
             binding.totalText.visibility = View.VISIBLE
+            // Headline is SESSIONS (photos), not summed condition checks, so a photo screened
+            // for two conditions isn't counted twice. The per-condition numbers below are the
+            // secondary breakdown, reconciled explicitly.
+            binding.totalText.text = getString(R.string.dashboard_sessions_format, stats.sessionCount)
+            val details = mutableListOf<String>()
+            if (stats.bothConditionsSessions > 0) {
+                details += getString(R.string.dashboard_sessions_both_format, stats.bothConditionsSessions)
+            }
+            if (stats.overriddenSessionCount > 0) {
+                details += getString(R.string.dashboard_sessions_overridden_format, stats.overriddenSessionCount)
+            }
+            binding.sessionsDetailText.text = details.joinToString("\n")
+            binding.sessionsDetailText.visibility = if (details.isEmpty()) View.GONE else View.VISIBLE
+
+            if (stats.sessionCount == 0) {
+                binding.statsContainer.visibility = View.GONE
+                return@launch
+            }
             binding.statsContainer.visibility = View.VISIBLE
-            binding.totalText.text = getString(R.string.dashboard_total_format, stats.totalAllDiseases)
+            binding.reconcileText.text = getString(
+                R.string.dashboard_reconcile_format,
+                stats.sessionCount, stats.conditionChecks, stats.bothConditionsSessions,
+            )
 
             val sc = stats.perDisease.first { it.disease == Disease.SICKLE_CELL }
             bindDiseaseSection(sc, binding.scEmptyText, binding.scStatsGroup, binding.scBreakdownText, binding.scReferralText, binding.scBarChart)
@@ -133,13 +156,14 @@ class DashboardFragment : Fragment() {
     private fun onExportClicked() {
         viewLifecycleOwner.lifecycleScope.launch {
             val records = withContext(Dispatchers.IO) { repository.getAllRecords() }
+            val sessions = withContext(Dispatchers.IO) { repository.getAllSessions() }
             if (records.isEmpty()) {
                 Toast.makeText(requireContext(), getString(R.string.export_empty), Toast.LENGTH_SHORT).show()
                 return@launch
             }
 
             try {
-                val uri = withContext(Dispatchers.IO) { writeCsvFile(records.let { CsvExporter.toCsv(it) }) }
+                val uri = withContext(Dispatchers.IO) { writeCsvFile(CsvExporter.toCsv(sessions, records)) }
                 shareCsv(uri)
             } catch (e: IOException) {
                 Log.e(TAG, "CSV export failed", e)

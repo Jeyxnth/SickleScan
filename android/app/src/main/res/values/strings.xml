@@ -29,7 +29,10 @@
     <string name="dashboard_breakdown_format">%1$d screenings — Positive %2$.0f%% · Negative %3$.0f%% · Borderline %4$.0f%%</string>
     <string name="dashboard_referral_format">Flagged for lab confirmation: %1$d</string>
     <string name="dashboard_disease_empty">No screenings for this condition yet.</string>
-    <string name="dashboard_trend_title">Positive screenings per day (last 7 days)</string>
+    <string name="dashboard_trend_sickle">Sickle Cell — positive cases this week</string>
+    <string name="dashboard_trend_malaria">Malaria — positive cases this week</string>
+    <string name="cross_domain_warning">Each model is trained on its own kind of image: Sickle Cell on blood-smear field photos, Malaria on single-cell images. If this photo was taken for one condition, treat the other condition\'s result as unreliable, even when it shows high confidence.</string>
+    <string name="cross_domain_warning_title">Two results, one photo</string>
     <string name="dashboard_empty">No screenings logged yet. Results are recorded automatically after each analysis.</string>
 
     <string name="disease_sickle_cell">Sickle Cell</string>
@@ -41,8 +44,16 @@
 
     <string name="guardrail_reject_message">This doesn\'t look like a blood smear photo. Please retake through the microscope attachment.</string>
     <string name="guardrail_retake">Retake photo</string>
-    <string name="guardrail_analyze_anyway">Analyze anyway</string>
-    <string name="guardrail_override_caveat">The image check flagged this photo as not looking like a blood smear. Treat this result with caution — it is not included in the dashboard screening stats.</string>
+    <string name="guardrail_continue_anyway">Continue anyway</string>
+    <string name="guardrail_continuing_note">The image check flagged this photo. Results will carry a caution and be kept out of the dashboard stats.</string>
+    <string name="guardrail_override_caveat">The image check flagged this photo as not looking like a blood smear. Treat this result with caution — it is saved and exported, but not included in the dashboard screening stats.</string>
+    <string name="select_conditions_title">Which conditions should we screen this photo for?</string>
+    <string name="checking_image">Checking image…</string>
+    <string name="dashboard_sessions_format">Sessions (photos analyzed): %1$d</string>
+    <string name="dashboard_sessions_both_format">%1$d checked for both conditions</string>
+    <string name="dashboard_sessions_overridden_format">+%1$d analyzed despite the image-check warning (excluded from all stats below)</string>
+    <string name="dashboard_reconcile_format">%1$d photos → %2$d condition checks (%3$d photos were checked for both conditions, so they count once above and once under each condition).</string>
+    <string name="dashboard_screenings_by_condition">Screenings by condition</string>
     <string name="dashboard_guardrail_title">Image check (guardrail)</string>
     <string name="dashboard_guardrail_note">Photos that didn\'t look like a blood smear. Counted separately from screening results above.</string>
     <string name="dashboard_guardrail_format">%1$d of %2$d image checks rejected (%3$.1f%%) · %4$d analyzed anyway</string>

@@ -1,4 +1,4 @@
-# SickleScan Android app — Phase 2 + 3 + 4 + 6 + 7
+# SickleScan Android app — Phase 2 + 3 + 4 + 6 + 7 + 8
 
 Kotlin app that runs on-device models fully offline: capture or pick a
 blood smear photo, choose which condition to screen for, tap Analyze, get
@@ -6,6 +6,31 @@ a screening result, confidence %, referral guidance, and the disclaimer —
 never a diagnosis. Every screening is logged locally (Room, tagged with
 which disease it was for) and can be reviewed as aggregate stats on a
 Dashboard tab, or exported as CSV.
+
+## Phase 8 additions (capture first, then choose condition(s))
+
+- **Flow**: capture/pick ONE photo -> guardrail check (once) -> pick Sickle Cell,
+  Malaria, or both (checkboxes) -> Analyze -> the selected model(s) run
+  sequentially on the SAME bitmap -> one result card per condition (own confidence,
+  referral status, disclaimer; never merged). The Phase 6 pre-capture toggle is gone.
+- **Input compatibility (checked, not assumed)**: guardrail, sickle-cell and malaria
+  models all take float32 `[1,224,224,3]`, no built-in quantization, output `[1,1]`.
+- **Sessions**: `capture_sessions(id, timestampMillis, guardrailResult accepted|overridden)`;
+  `screening_records.sessionId` is a real Room foreign key (CASCADE, indexed), 1-2 records
+  per session, written atomically. `guardrail_events.sessionId` links a rejection to the
+  overridden session it led to. DB v4, destructive migration (pre-release, as agreed).
+- **Overrides**: continuing past the image-check warning saves the session as
+  `overridden` (records kept and exported) but the dashboard excludes it from all stats.
+- **Dashboard**: headline is **Sessions (photos analyzed)**; per-condition screening counts
+  and stats sit underneath with an explicit reconciliation line ("N photos -> M condition
+  checks; K photos were checked for both"). Overridden sessions appear on their own line.
+- **CSV**: `session_id,timestamp,disease,result,confidence_percent,referral_flag,image_check`
+  -- rows from one photo share a session_id and timestamp.
+- **Known limitation**: each disease model is only meaningful on its own image type.
+  Running both on one photo means one verdict is out-of-domain (e.g. the sickle-cell model
+  outputs a confident "positive" 0.81 on a malaria cell image). The guardrail can't catch
+  this since both image types are smear-like.
+- `SharedImageBothDiseasesInstrumentedTest` is build-verified only (no device available).
 
 ## Phase 7 additions (guardrail: reject non-smear images)
 

@@ -22,7 +22,14 @@ data class DiseaseStats(
 )
 
 data class DashboardStats(
-    val totalAllDiseases: Int,
+    /** Headline: accepted sessions = photos analyzed and counted in the stats. */
+    val sessionCount: Int,
+    /** Of [sessionCount], how many were screened for both conditions. */
+    val bothConditionsSessions: Int,
+    /** Sessions the user continued past the image-check warning: saved, but excluded from ALL stats here. */
+    val overriddenSessionCount: Int,
+    /** Condition checks in counted sessions == sum of perDisease totals (== sessionCount + bothConditionsSessions). */
+    val conditionChecks: Int,
     /** One entry per [Disease], in enum order, even when that disease has 0 screenings. */
     val perDisease: List<DiseaseStats>,
 )
@@ -42,14 +49,31 @@ object DashboardAggregator {
     private const val DEFAULT_WINDOW_DAYS = 7
 
     fun compute(
+        sessions: List<CaptureSession>,
         records: List<ScreeningRecord>,
         nowMillis: Long = System.currentTimeMillis(),
         windowDays: Int = DEFAULT_WINDOW_DAYS,
     ): DashboardStats {
+        // Only sessions that passed the guardrail count. Overridden sessions are saved (and
+        // exported) but reported separately, so a photo the guardrail flagged can't move the
+        // positive/negative percentages. Records whose session isn't a counted one are ignored.
+        val countedSessionIds = sessions
+            .filter { it.guardrailResult == CaptureSession.GUARDRAIL_ACCEPTED }
+            .map { it.id }
+            .toSet()
+        val counted = records.filter { it.sessionId in countedSessionIds }
+
         val perDisease = Disease.entries.map { disease ->
-            computeForDisease(disease, records.filter { it.disease == disease.storageKey }, nowMillis, windowDays)
+            computeForDisease(disease, counted.filter { it.disease == disease.storageKey }, nowMillis, windowDays)
         }
-        return DashboardStats(totalAllDiseases = records.size, perDisease = perDisease)
+        val bothConditions = counted.groupBy { it.sessionId }.count { (_, rs) -> rs.map { it.disease }.distinct().size == 2 }
+        return DashboardStats(
+            sessionCount = countedSessionIds.size,
+            bothConditionsSessions = bothConditions,
+            overriddenSessionCount = sessions.count { it.guardrailResult == CaptureSession.GUARDRAIL_OVERRIDDEN },
+            conditionChecks = counted.size,
+            perDisease = perDisease,
+        )
     }
 
     private fun computeForDisease(
