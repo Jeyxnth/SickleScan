@@ -27,3 +27,8 @@ model_output/tiling/user_photo*.png
 model_output/bbbc041/complete_A.png
 model_output/bbbc041/photo2_oracle.png
 model_output/bbbc041/photo_overlays_new.png
+data/tiling_validation/**/*.webp
+data/tiling_validation/**/*.gif
+data/tiling_validation/**/*.bmp
+data/tiling_validation/**/*.tif
+data/tiling_validation/**/*.tiff
