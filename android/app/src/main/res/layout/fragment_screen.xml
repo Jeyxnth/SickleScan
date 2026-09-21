@@ -185,6 +185,15 @@
                     android:layout_height="wrap_content"
                     android:text="@string/disease_malaria" />
 
+                <TextView
+                    android:id="@+id/malariaHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
+                    android:text="@string/malaria_input_hint"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="@color/disclaimer_gray" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAnalyze"
                     android:layout_width="match_parent"

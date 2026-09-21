@@ -11,7 +11,7 @@ import com.sicklescan.app.data.DailyCount
 import kotlin.math.max
 
 /**
- * A minimal bar chart drawn directly with Canvas -- positive screenings per day.
+ * A minimal bar chart drawn directly with Canvas -- cases flagged for lab confirmation per day.
  * Deliberately not a charting library: this is exactly the "basic
  * Canvas/Compose chart" the brief allowed, so nothing heavier was added.
  */

@@ -40,14 +40,15 @@ object ScreeningInterpreter {
     // Sickle cell: 65% was chosen and validated against that model's own
     // test-set confidence distribution in Phase 3.
     //
-    // Malaria: also 65%, but independently validated against the malaria
-    // model's own test-set confidence distribution (Phase 5), not assumed
-    // to transfer just because it worked for sickle cell. Binned test-set
-    // accuracy by confidence: below 65% confidence, accuracy is 58.4% (113
-    // of 4,134 test images, 2.7%) -- barely better than chance, exactly
-    // what "uncertain, refer" should mean. At/above 65%, accuracy jumps to
-    // 97.4%. The two models landing on the same number is a coincidence of
-    // the data, not an assumption -- see malaria_results.md.
+    // Malaria (Phase 10, BBBC041-trained classifier): also 65%, validated independently on THIS model's
+    // own held-out data rather than carried over from the earlier NIH-trained model. Accuracy below vs
+    // at/above 65% confidence: validation (same imaging setup as training) 65% (n=20) vs 98.9%; official
+    // BBBC041 test set (different microscope setup, never used for training/selection) 50% (n=52) vs
+    // 97.3%. Only ~1% of crops fall below the cutoff. Caveat that the ceiling cannot fix: on the
+    // shifted test set infected cells are confidently called uninfected 51% of the time (their scores
+    // are compressed toward 0), so a low-risk "Negative" from this model is weaker evidence on images from
+    // an unfamiliar microscope/camera than on training-like ones -- see
+    // model_output/malaria_bbbc041/malaria_bbbc041_results.md.
     private val BORDERLINE_CEILING: Map<Disease, Float> = mapOf(
         Disease.SICKLE_CELL to 65f,
         Disease.MALARIA to 65f,

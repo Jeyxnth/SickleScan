@@ -13,3 +13,17 @@ artifacts/
 
 # Phase 7 guardrail: extracted negative-class images (regenerable via scripts/guardrail/build_dataset.py)
 data/guardrail/negatives/
+
+# Phase 9a validation photos (user-supplied, possibly sensitive): never commit
+data/tiling_validation/**/*.jpg
+data/tiling_validation/**/*.jpeg
+data/tiling_validation/**/*.png
+
+# Phase 10 demo crops derived from BBBC041 (licence for redistribution not verified): keep local
+demo_images/
+
+# Figures that reproduce user-supplied photos or BBBC041 images (redistribution terms unverified): keep local
+model_output/tiling/user_photo*.png
+model_output/bbbc041/complete_A.png
+model_output/bbbc041/photo2_oracle.png
+model_output/bbbc041/photo_overlays_new.png

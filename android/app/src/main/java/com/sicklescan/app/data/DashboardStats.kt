@@ -17,7 +17,7 @@ data class DiseaseStats(
     val positivePercent: Float,
     val negativePercent: Float,
     val borderlinePercent: Float,
-    /** Positive screenings per day, last N days, oldest first. */
+    /** Cases flagged for lab confirmation (positive + borderline) per day, last N days, oldest first. */
     val dailyCounts: List<DailyCount>,
 )
 
@@ -100,7 +100,8 @@ object DashboardAggregator {
             positivePercent = percentOf(positiveCount),
             negativePercent = percentOf(negativeCount),
             borderlinePercent = percentOf(borderlineCount),
-            dailyCounts = dailyCounts(records.filter { it.result == "positive" }, nowMillis, windowDays),
+            // Same definition as referralCount, so the chart total always matches the "flagged" figure above it.
+            dailyCounts = dailyCounts(records.filter { it.referralFlag }, nowMillis, windowDays),
         )
     }
 

@@ -110,7 +110,7 @@ class DashboardAggregatorTest {
     }
 
     @Test
-    fun `daily counts only include positive screenings for that disease, bucketed by day and zero-filled`() {
+    fun `daily counts include every case flagged for lab confirmation (positive and borderline), not negatives, per disease`() {
         val now = System.currentTimeMillis()
         val f = SessionFixture()
         f.photo(dayMillis(0, now), Rec(sc, "positive"))
@@ -123,9 +123,10 @@ class DashboardAggregatorTest {
 
         val s = stats(Disease.SICKLE_CELL, result.perDisease)
         assertEquals(7, s.dailyCounts.size)
-        assertEquals(1, s.dailyCounts.last().count) // today; its negative is excluded
-        assertEquals(1, s.dailyCounts[s.dailyCounts.size - 1 - 2].count) // 2 days ago
-        assertEquals(2, s.dailyCounts.sumOf { it.count }) // negative + borderline not counted
+        assertEquals(1, s.dailyCounts.last().count) // today: the positive counts, its negative does not
+        assertEquals(2, s.dailyCounts[s.dailyCounts.size - 1 - 2].count) // 2 days ago: positive + borderline
+        assertEquals(3, s.dailyCounts.sumOf { it.count }) // negatives never counted
+        assertEquals(s.referralCount, s.dailyCounts.sumOf { it.count }) // chart total == "flagged" figure
 
         val m = stats(Disease.MALARIA, result.perDisease)
         assertEquals(1, m.dailyCounts.sumOf { it.count }) // sickle cell's counts don't leak in

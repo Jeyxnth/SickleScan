@@ -19,3 +19,10 @@ Both models share identical architecture, preprocessing, training methodology, a
 Malaria's numbers are better across the board, and the reason is straightforward: **48x more training data** (27,558 vs 569 images) and a much larger, better-balanced test set (4,134 vs 86 images) — 4,134 test images give far tighter, more trustworthy estimates than 86 do. The sickle cell numbers aren't wrong, they're just measured with much more uncertainty, and the model itself has less data to learn from. This gap is worth stating plainly in the pitch rather than letting two similar-looking percentages imply similar confidence — sensitivity of "93.75%" on 86 test images is a coarser measurement than "94.34%" on 4,134.
 
 Thalassemia is not in this table: no lab-confirmed public dataset was found at a usable size/quality (see Phase 5 research notes) and it remains out of scope.
+
+---
+
+**Update (Phase 10):** the malaria model bundled in the app is now the BBBC041-trained classifier
+(`model_output/malaria_bbbc041/`), not the NIH-trained model in the table above. The table above still
+describes the archived NIH model accurately. The two are trained on different data and are not directly
+comparable (different image type, different test sets); see `model_output/malaria_bbbc041/malaria_bbbc041_results.md`.

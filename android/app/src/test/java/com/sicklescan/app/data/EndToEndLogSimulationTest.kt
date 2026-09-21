@@ -36,10 +36,20 @@ class EndToEndLogSimulationTest {
         "pos_393.jpg" to 0.9999f,
     )
 
-    // Both-conditions sessions: ONE image, run through BOTH models (sickle P, malaria P).
+    // Both-conditions sessions: ONE image, run through BOTH shipped models (sickle P, malaria P).
+    // Malaria values are from the Phase 10 BBBC041-trained model (NIH-style crops score low there --
+    // a real limitation of that model on NIH-style images, see model_output/malaria_bbbc041/).
     private val bothConditions = listOf(
-        Triple("pos_20.jpg (sickle set)", 0.9646f, 0.0356f),
-        Triple("parasitized_1.png (malaria set)", 0.8061f, 0.9825f),
+        Triple("pos_20.jpg (sickle set)", 0.9646f, 0.0945f),
+        Triple("parasitized_1.png (NIH-style malaria crop)", 0.8061f, 0.0288f),
+    )
+
+    // Malaria-only sessions: real outputs of the shipped model on three held-out BBBC041 demo crops
+    // (a confident infected, a low-confidence infected that lands in Borderline, a confident uninfected).
+    private val malariaOnly = linkedMapOf(
+        "infected_1_ring.png" to 0.9912f,
+        "infected_5_trophozoite.png" to 0.5343f,
+        "uninfected_1_redbloodcell.png" to 0.0010f,
     )
 
     private fun rec(disease: Disease, p: Float): Rec {
@@ -58,16 +68,17 @@ class EndToEndLogSimulationTest {
         bothConditions.forEach { (_, sickleP, malariaP) ->
             f.photo(ts(), rec(Disease.SICKLE_CELL, sickleP), rec(Disease.MALARIA, malariaP))
         }
+        malariaOnly.values.forEach { p -> f.photo(ts(), rec(Disease.MALARIA, p)) }
         // One photo the guardrail flagged that the user continued past: saved + exported, excluded from stats.
         f.photo(ts(), rec(Disease.SICKLE_CELL, 0.99f), guardrail = CaptureSession.GUARDRAIL_OVERRIDDEN)
 
         val stats = DashboardAggregator.compute(f.sessions, f.records, nowMillis = now)
 
-        // 11 sickle-only + 2 both-condition photos = 13 sessions (the overridden one is separate).
-        assertEquals(13, stats.sessionCount)
+        // 11 sickle-only + 2 both-condition + 3 malaria-only photos = 16 sessions (the overridden one is separate).
+        assertEquals(16, stats.sessionCount)
         assertEquals(2, stats.bothConditionsSessions)
         assertEquals(1, stats.overriddenSessionCount)
-        assertEquals(15, stats.conditionChecks) // 11 + 2*2
+        assertEquals(18, stats.conditionChecks) // 11 + 2*2 + 3
         assertEquals(stats.sessionCount + stats.bothConditionsSessions, stats.conditionChecks)
 
         val sc = stats.perDisease.first { it.disease == Disease.SICKLE_CELL }
@@ -75,9 +86,10 @@ class EndToEndLogSimulationTest {
         assertEquals(11, sc.positiveCount) // 9 of the 11 + both pair photos positive (0.9646, 0.8061)
         assertEquals(2, sc.negativeCount)
         val mal = stats.perDisease.first { it.disease == Disease.MALARIA }
-        assertEquals(2, mal.total)
-        assertEquals(1, mal.positiveCount) // parasitized_1
-        assertEquals(1, mal.negativeCount) // pos_20 as seen by the malaria model
+        assertEquals(5, mal.total)                 // 2 from the both-condition photos + 3 malaria-only
+        assertEquals(1, mal.positiveCount)         // infected_1_ring (0.9912)
+        assertEquals(1, mal.borderlineCount)       // infected_5_trophozoite: 53.4% confidence < 65% ceiling
+        assertEquals(3, mal.negativeCount)         // the two both-condition photos + uninfected_1
         assertEquals(stats.conditionChecks, stats.perDisease.sumOf { it.total })
 
         val csv = CsvExporter.toCsv(f.sessions, f.records)
@@ -91,7 +103,7 @@ class EndToEndLogSimulationTest {
 
         val lines = csv.trim().split("\n")
         assertEquals("session_id,timestamp,disease,result,confidence_percent,referral_flag,image_check", lines[0])
-        assertEquals(1 + 16, lines.size) // 15 counted rows + 1 overridden row
+        assertEquals(1 + 19, lines.size) // 18 counted rows + 1 overridden row
         // Session linkage: each both-condition photo yields two rows with the same session_id.
         val rowsBySession = lines.drop(1).map { it.split(",") }.groupBy { it[0] }
         assertEquals(2, rowsBySession.values.count { it.size == 2 })
@@ -103,12 +115,12 @@ class EndToEndLogSimulationTest {
     }
 
     /**
-     * Cross-checks the two weekly "positive cases" charts against a hand tally of the raw
+     * Cross-checks the two weekly "flagged for lab confirmation" charts against a hand tally of the raw
      * simulated results that never touches DashboardAggregator: every result is recorded
      * as (day offset, disease, status) as it is generated, then tallied independently.
      */
     @Test
-    fun `weekly positive-case charts match a hand tally of the raw simulated results`() {
+    fun `weekly flagged-case charts match a hand tally of the raw simulated results`() {
         val now = System.currentTimeMillis()
         val f = SessionFixture()
         val raw = mutableListOf<Triple<Int, String, String>>() // (days ago, disease, status), counted sessions only
@@ -125,9 +137,10 @@ class EndToEndLogSimulationTest {
             if (!overridden) recs.forEach { raw += Triple(daysAgo, it.disease, it.result) }
         }
 
-        // Same data as the 13-session simulation above (+ the overridden positive that must NOT appear).
+        // Same data as the simulation above (+ the overridden positive that must NOT appear).
         sickleOnly.values.forEach { p -> photo(false, Disease.SICKLE_CELL to p) }
         bothConditions.forEach { (_, s, m) -> photo(false, Disease.SICKLE_CELL to s, Disease.MALARIA to m) }
+        malariaOnly.values.forEach { p -> photo(false, Disease.MALARIA to p) }
         photo(true, Disease.SICKLE_CELL to 0.99f)
 
         val stats = DashboardAggregator.compute(f.sessions, f.records, nowMillis = now, windowDays = 7)
@@ -135,9 +148,9 @@ class EndToEndLogSimulationTest {
         for (disease in Disease.entries) {
             val chart = stats.perDisease.first { it.disease == disease }.dailyCounts
             assertEquals(7, chart.size)
-            // Independent expectation: POSITIVE only (not borderline, not negative), this disease only.
+            // Independent expectation: every case FLAGGED for lab confirmation (positive + borderline, not negative), this disease only.
             val expectedByDaysAgo = raw
-                .filter { it.second == disease.storageKey && it.third == "positive" }
+                .filter { it.second == disease.storageKey && it.third != "negative" }
                 .groupingBy { it.first }.eachCount()
             for (daysAgo in 0..6) {
                 assertEquals(
@@ -146,14 +159,14 @@ class EndToEndLogSimulationTest {
                     chart[6 - daysAgo].count, // chart is oldest-first, today last
                 )
             }
-            println("${disease.displayName} — positive cases this week: " + chart.joinToString("  ") { "${it.label}:${it.count}" })
+            println("${disease.displayName} — flagged cases this week: " + chart.joinToString("  ") { "${it.label}:${it.count}" })
         }
 
         val sickleChart = stats.perDisease.first { it.disease == Disease.SICKLE_CELL }.dailyCounts
         val malariaChart = stats.perDisease.first { it.disease == Disease.MALARIA }.dailyCounts
         assertEquals("9 positives among the 11 sickle-only + 2 pair photos; overridden one excluded", 11, sickleChart.sumOf { it.count })
-        assertEquals("only parasitized_1 is a malaria positive", 1, malariaChart.sumOf { it.count })
-        // Charts show positives only, so they must be smaller than the totals that include negatives.
+        assertEquals("infected_1_ring (positive) + infected_5_trophozoite (borderline) are flagged; the negatives are not", 2, malariaChart.sumOf { it.count })
+        // Charts exclude negatives, so they must be smaller than the totals that include them.
         assertTrue(sickleChart.sumOf { it.count } < stats.perDisease.first { it.disease == Disease.SICKLE_CELL }.total)
     }
 }

@@ -29,14 +29,15 @@
     <string name="dashboard_breakdown_format">%1$d screenings — Positive %2$.0f%% · Negative %3$.0f%% · Borderline %4$.0f%%</string>
     <string name="dashboard_referral_format">Flagged for lab confirmation: %1$d</string>
     <string name="dashboard_disease_empty">No screenings for this condition yet.</string>
-    <string name="dashboard_trend_sickle">Sickle Cell — positive cases this week</string>
-    <string name="dashboard_trend_malaria">Malaria — positive cases this week</string>
+    <string name="dashboard_trend_sickle">Sickle Cell — cases flagged for lab confirmation this week</string>
+    <string name="dashboard_trend_malaria">Malaria — cases flagged for lab confirmation this week</string>
     <string name="cross_domain_warning">Each model is trained on its own kind of image: Sickle Cell on blood-smear field photos, Malaria on single-cell images. If this photo was taken for one condition, treat the other condition\'s result as unreliable, even when it shows high confidence.</string>
     <string name="cross_domain_warning_title">Two results, one photo</string>
     <string name="dashboard_empty">No screenings logged yet. Results are recorded automatically after each analysis.</string>
 
     <string name="disease_sickle_cell">Sickle Cell</string>
     <string name="disease_malaria">Malaria</string>
+    <string name="malaria_input_hint">For best results, use a close-up image of a single blood cell.</string>
     <string name="export_csv">Export CSV</string>
     <string name="export_empty">Nothing to export yet — run a screening first.</string>
     <string name="export_failed">Couldn\'t export the CSV file. Please try again.</string>
@@ -54,8 +55,4 @@
     <string name="dashboard_sessions_overridden_format">+%1$d analyzed despite the image-check warning (excluded from all stats below)</string>
     <string name="dashboard_reconcile_format">%1$d photos → %2$d condition checks (%3$d photos were checked for both conditions, so they count once above and once under each condition).</string>
     <string name="dashboard_screenings_by_condition">Screenings by condition</string>
-    <string name="dashboard_guardrail_title">Image check (guardrail)</string>
-    <string name="dashboard_guardrail_note">Photos that didn\'t look like a blood smear. Counted separately from screening results above.</string>
-    <string name="dashboard_guardrail_format">%1$d of %2$d image checks rejected (%3$.1f%%) · %4$d analyzed anyway</string>
-    <string name="dashboard_guardrail_empty">No image checks logged yet.</string>
 </resources>

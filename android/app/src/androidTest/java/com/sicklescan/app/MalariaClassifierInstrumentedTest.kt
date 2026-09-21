@@ -15,12 +15,16 @@ import org.junit.runner.RunWith
  * + identical bilinear-resize/normalize preprocessing through Python
  * against these same 8 images.
  *
- * `parasitized_misclassified.png` is deliberately a real error case (the
- * model itself predicts "uninfected" for a truly parasitized cell, ~3.1%
- * of test images do this per malaria_results.md) -- kept rather than
- * cherry-picked away, so this test verifies the Kotlin implementation
- * faithfully reproduces the model's actual behavior, errors included, not
- * that the model is always right.
+ * Phase 10: the bundled malaria model is now the BBBC041-trained classifier (native-scale
+ * thin-smear cell crops), NOT the NIH-trained one these images were bundled for. These 8 images
+ * are NIH-style segmented cells on a black background; the new model calls ALL of them
+ * "uninfected", including the four truly parasitized ones (P(infected) 0.0001-0.03). That is a
+ * real limitation of the new model on NIH-style crops, recorded here rather than hidden: this
+ * test only verifies that the Kotlin inference path reproduces the model's actual output
+ * (independently computed in Python from the same .tflite with the same preprocessing), not that
+ * the model is right on these images. Correctness on BBBC041-style crops is validated in
+ * model_output/malaria_bbbc041/ (the BBBC-derived demo crops are not bundled here: their
+ * redistribution licence is unverified).
  *
  * Must run on a device/emulator (`./gradlew connectedDebugAndroidTest`) --
  * the TFLite native library only runs under the real Android runtime/ABI.
@@ -28,17 +32,17 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class MalariaClassifierInstrumentedTest {
 
-    // fileName -> expected predicted label ("parasitized"/"uninfected"),
-    // verified against model_output/malaria/malaria_model.tflite directly.
+    // fileName -> label the SHIPPED (BBBC041) model actually predicts, verified in Python
+    // against the bundled malaria_model.tflite. Parasitized ones are misses -- see note above.
     private val expected = mapOf(
         "uninfected_1.png" to "uninfected",
-        "parasitized_misclassified.png" to "uninfected", // real model error; true label is parasitized
+        "parasitized_misclassified.png" to "uninfected", // true label parasitized; model miss
         "uninfected_2.png" to "uninfected",
-        "parasitized_1.png" to "parasitized",
+        "parasitized_1.png" to "uninfected",             // true label parasitized; model miss (P=0.029)
         "uninfected_3.png" to "uninfected",
         "uninfected_4.png" to "uninfected",
-        "parasitized_2.png" to "parasitized",
-        "parasitized_3.png" to "parasitized",
+        "parasitized_2.png" to "uninfected",             // true label parasitized; model miss (P=0.002)
+        "parasitized_3.png" to "uninfected",             // true label parasitized; model miss (P=0.0001)
     )
 
     @Test

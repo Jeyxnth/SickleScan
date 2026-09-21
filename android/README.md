@@ -1,4 +1,4 @@
-# SickleScan Android app — Phase 2 + 3 + 4 + 6 + 7 + 8
+# SickleScan Android app — Phase 2 + 3 + 4 + 6 + 7 + 8 + 10
 
 Kotlin app that runs on-device models fully offline: capture or pick a
 blood smear photo, choose which condition to screen for, tap Analyze, get
@@ -6,6 +6,23 @@ a screening result, confidence %, referral guidance, and the disclaimer —
 never a diagnosis. Every screening is logged locally (Room, tagged with
 which disease it was for) and can be reviewed as aggregate stats on a
 Dashboard tab, or exported as CSV.
+
+## Phase 10 additions (BBBC041 malaria model; dashboard image-check section removed)
+
+- **Malaria model swapped**: the bundled `malaria_model.tflite` is now the BBBC041-trained
+  classifier (float32, 9.3 MB), not the NIH-trained one (archived unchanged in
+  `/model_output/malaria/`). Same input/output shape and label order, so no app-code change was needed.
+  See `/model_output/malaria_bbbc041/malaria_bbbc041_results.md`. **Supported input: a close-up
+  image of a single blood cell** -- there is no cell-detection step, so wide-field photos are
+  classified as one image and are out of scope. The malaria checkbox now says so.
+- **Threshold**: the 65% borderline ceiling was re-validated on this model's own held-out data
+  (below-cutoff accuracy 65% val / 50% test vs 98.9% / 97.3% above), not inherited.
+- **Known limitation**: on the official BBBC041 test set (a different microscope setup) infected
+  cells are called uninfected with >=65% confidence 51% of the time; on training-like images
+  recall is 97%. NIH-style crops (black background) are all read as uninfected.
+- **Dashboard**: the "Image check (guardrail)" section is gone (display only). The guardrail
+  itself is unchanged: it still runs on every capture, shows the soft warning, and rejections are
+  still logged to `guardrail_events`. CSV export and the Room schema are unchanged.
 
 ## Phase 8 additions (capture first, then choose condition(s))
 

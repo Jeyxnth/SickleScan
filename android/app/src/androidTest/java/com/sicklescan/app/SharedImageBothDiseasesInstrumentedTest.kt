@@ -15,9 +15,10 @@ import org.junit.runner.RunWith
  * .tflite files with identical preprocessing (all three models take a float32
  * [1,224,224,3] input, verified). Tolerance allows for device/JPEG-decoder drift.
  *
- * Note the second row: the sickle-cell model, given a malaria cell image, still
- * outputs a confident "positive" (0.81). The disease models are only meaningful
- * on their own image type; this test pins the behaviour, it doesn't endorse it.
+ * Note the second row: the sickle-cell model, given a NIH-style malaria cell image, still
+ * outputs a confident "positive" (0.81), while the (BBBC041-trained, Phase 10) malaria model
+ * calls that same NIH-style cell uninfected (0.03). The disease models are only meaningful on
+ * their own image type; this test pins the behaviour, it doesn't endorse it.
  *
  * Must run on a device/emulator (`./gradlew connectedDebugAndroidTest`); not run here.
  */
@@ -26,8 +27,8 @@ class SharedImageBothDiseasesInstrumentedTest {
 
     // asset -> (sickle P(pos), malaria P(pos))
     private val expected = mapOf(
-        "sample_test_images/pos_20.jpg" to (0.9646f to 0.0356f),
-        "malaria_test_images/parasitized_1.png" to (0.8061f to 0.9825f),
+        "sample_test_images/pos_20.jpg" to (0.9646f to 0.0945f),
+        "malaria_test_images/parasitized_1.png" to (0.8061f to 0.0288f),
     )
 
     @Test
