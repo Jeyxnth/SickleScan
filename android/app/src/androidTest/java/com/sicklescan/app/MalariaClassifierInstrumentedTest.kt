@@ -52,7 +52,7 @@ class MalariaClassifierInstrumentedTest {
 
         try {
             expected.forEach { (fileName, expectedLabel) ->
-                val bitmap = context.assets.open("malaria_test_images/$fileName").use { stream ->
+                val bitmap = InstrumentationRegistry.getInstrumentation().context.assets.open("malaria_test_images/$fileName").use { stream ->
                     BitmapFactory.decodeStream(stream)
                 }
                 requireNotNull(bitmap) { "Failed to decode test asset $fileName" }

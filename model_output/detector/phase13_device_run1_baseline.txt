@@ -1,0 +1,23 @@
+--------- beginning of main
+09-22 00:26:31.388 12610 12632 I WideFieldEval: warm-up run: 7296 ms (114 cells)
+09-22 00:26:36.443 12610 12632 I WideFieldEval: 2bd15b6e-fe2d-49f3-b394-940d024d1f91.png [infected] cells 114 (py 114) top 0.9995 (py 0.9994) total 5000 ms = prep 151 + detect 332 + crop 1764 + classify 2750
+09-22 00:26:39.419 12610 12632 I WideFieldEval: 34a70114-d3e3-4351-b8db-f6caab17e743.png [infected] cells 62 (py 62) top 1.0000 (py 1.0000) total 2927 ms = prep 146 + detect 328 + crop 958 + classify 1493
+09-22 00:26:42.893 12610 12632 I WideFieldEval: b9d65ef3-1adc-4479-abee-2e422f5a613a.png [infected] cells 75 (py 75) top 1.0000 (py 1.0000) total 3429 ms = prep 148 + detect 316 + crop 1158 + classify 1805
+09-22 00:26:47.410 12610 12632 I WideFieldEval: 01b38a56-13eb-447b-89ee-fc21cb40dcc1.png [infected] cells 101 (py 101) top 1.0000 (py 1.0000) total 4465 ms = prep 147 + detect 319 + crop 1558 + classify 2438
+09-22 00:26:49.371 12610 12632 I WideFieldEval: dc6ac71b-2616-431e-bfd5-4c38139e4ddd.png [infected] cells 37 (py 37) top 0.9999 (py 0.9999) total 1919 ms = prep 143 + detect 316 + crop 568 + classify 890
+09-22 00:26:52.334 12610 12632 I WideFieldEval: 1574565f-f45b-4160-947e-25ce1a81aaca.png [infected] cells 62 (py 62) top 1.0000 (py 1.0000) total 2908 ms = prep 144 + detect 315 + crop 956 + classify 1490
+09-22 00:26:55.571 12610 12632 I WideFieldEval: dce55b59-c6c3-4693-aa75-6b348c8f52cd.png [infected] cells 69 (py 69) top 0.9999 (py 0.9999) total 3188 ms = prep 146 + detect 316 + crop 1061 + classify 1663
+09-22 00:26:58.058 12610 12632 I WideFieldEval: 0ab56f9a-846d-49e2-a617-c6cc477fdfad.png [infected] cells 50 (py 50) top 0.9980 (py 0.9977) total 2432 ms = prep 144 + detect 315 + crop 770 + classify 1201
+09-22 00:27:02.338 12610 12632 I WideFieldEval: 9c48fdf4-621d-4f40-bcd7-6a28cd530de7.png [infected] cells 95 (py 95) top 1.0000 (py 1.0000) total 4225 ms = prep 145 + detect 317 + crop 1475 + classify 2286
+09-22 00:27:06.016 12610 12632 I WideFieldEval: 9f959520-e15e-45c2-bc29-ef3c19154d1c.png [infected] cells 80 (py 80) top 1.0000 (py 1.0000) total 3629 ms = prep 143 + detect 315 + crop 1238 + classify 1930
+09-22 00:27:10.709 12610 12632 I WideFieldEval: 25c6cfb1-01d0-4864-87f9-02b7593683c7.png [infected] cells 106 (py 106) top 0.9999 (py 0.9999) total 4641 ms = prep 144 + detect 316 + crop 1626 + classify 2552
+09-22 00:27:14.843 12610 12632 I WideFieldEval: deaa1931-5f97-45bf-8c00-be6ddeb37b9a.png [infected] cells 92 (py 92) top 0.9999 (py 0.9999) total 4087 ms = prep 143 + detect 315 + crop 1415 + classify 2212
+09-22 00:27:17.404 12610 12632 I WideFieldEval: 81a2748d-51c9-4439-995d-f747871d6544.png [negative] cells 52 (py 52) top 0.5500 (py 0.5501) total 2521 ms = prep 144 + detect 316 + crop 804 + classify 1255
+09-22 00:27:25.174 12610 12632 I WideFieldEval: 8b494b40-cab5-49d3-893d-c805000fbe88.png [negative] cells 183 (py 183) top 0.3629 (py 0.3972) total 7714 ms = prep 145 + detect 317 + crop 2846 + classify 4403
+09-22 00:27:29.141 12610 12632 I WideFieldEval: b5acf759-1115-42f0-a753-656736192528.png [negative] cells 87 (py 87) top 0.3465 (py 0.3359) total 3919 ms = prep 147 + detect 318 + crop 1360 + classify 2093
+09-22 00:27:31.745 12610 12632 I WideFieldEval: ed0d8763-e734-4506-b61b-53fc32a8d8c9.png [negative] cells 53 (py 53) top 0.2118 (py 0.2000) total 2562 ms = prep 146 + detect 315 + crop 823 + classify 1276
+09-22 00:27:34.636 12610 12632 I WideFieldEval: a7b6894d-eeea-4ed5-bc0e-785d6c6da8df.png [negative] cells 60 (py 60) top 0.9989 (py 0.9989) total 2844 ms = prep 146 + detect 316 + crop 938 + classify 1443
+09-22 00:27:38.152 12610 12632 I WideFieldEval: 5d1418d3-1559-4725-ad4a-9afb6eaecdfd.png [negative] cells 76 (py 76) top 0.9361 (py 0.9359) total 3466 ms = prep 147 + detect 316 + crop 1174 + classify 1827
+09-22 00:27:42.673 12610 12632 I WideFieldEval: 1a332b2c-9d49-4ff2-810c-5633d2314527.png [negative] cells 101 (py 101) top 0.7607 (py 0.7720) total 4472 ms = prep 148 + detect 315 + crop 1579 + classify 2428
+09-22 00:27:45.595 12610 12632 I WideFieldEval: 1e978dfa-d339-4025-809d-09cee76728ed.png [negative] cells 61 (py 61) top 0.3168 (py 0.3247) total 2877 ms = prep 145 + detect 315 + crop 951 + classify 1464
+09-22 00:27:45.596 12610 12632 I WideFieldEval: SUMMARY 20 fields: median 3466 ms, mean 3661 ms, max 7714 ms; mean per stage: prepare 145, detect 317, crop 1251, classify 1944 ms | decision mismatches vs Python: 0, top-score differences > 0.05: 0, cell counts differing by > 2: 0

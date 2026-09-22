@@ -1,0 +1,9 @@
+sickle model, all sickle images (TF resize vs phone resize) n=  569  |dP| mean 0.0024 max 0.0499  >0.03:    5  decision flips at 0.5: 0
+   app status (Positive/Borderline/Negative, 65% band) changes: 2/569; agreement with label at 0.5: TF 0.9367 vs phone 0.9367 (these images were also used to train the model, so this is parity, not held-out accuracy)
+guardrail v3: BBBC held-out validation fields (163) [accept] n=  163  |dP| mean 0.0001 max 0.0063  >0.03:    0  decision flips at 0.5: 0
+guardrail v3: BBBC official test images (120) [accept]     n=  120  |dP| mean 0.0084 max 0.1105  >0.03:    6  decision flips at 0.5: 0
+guardrail v3: sickle-cell test images (86) [accept]        n=   86  |dP| mean 0.0001 max 0.0044  >0.03:    0  decision flips at 0.5: 0
+guardrail v3: NIH single-cell test images (387) [accept]   n=  387  |dP| mean 0.0000 max 0.0022  >0.03:    0  decision flips at 0.5: 0
+guardrail v3: HELD-OUT real non-smear (945) [reject]       n=  945  |dP| mean 0.0001 max 0.0105  >0.03:    0  decision flips at 0.5: 0
+guardrail v3: FRESH non-smear (986) [reject]               n=  986  |dP| mean 0.0001 max 0.0472  >0.03:    1  decision flips at 0.5: 0
+guardrail v3: BBBC single-cell crops, 224 -> 224 (300 of 1,823) n=  300  |dP| mean 0.0000 max 0.0000  >0.03:    0  decision flips at 0.5: 0

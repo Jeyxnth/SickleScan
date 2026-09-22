@@ -14,7 +14,9 @@ import java.util.TimeZone
  * and timestamp, so two conditions run on one photo are visibly linked, not two
  * unrelated entries. image_check is "accepted" or "overridden" (the user continued
  * past the image-check warning; the dashboard excludes those from its stats, but
- * they are exported so a coordinator can see and filter them).
+ * they are exported so a coordinator can see and filter them). input_mode / cells_detected (Phase 13) tell a
+ * wide-field malaria row (per-cell scoring, "any cell" rule) from a whole-image one, whose confidence means something else. input_mode / cells_detected (Phase 13) tell a
+ * wide-field malaria row (per-cell scoring, "any cell" rule) from a whole-image one, whose confidence means something else.
  *
  * This CSV *is* the integration point with a district/PHC coordinator's
  * system in the current scope -- there is no server to upload to, and
@@ -29,7 +31,7 @@ object CsvExporter {
     fun toCsv(sessions: List<CaptureSession>, records: List<ScreeningRecord>): String {
         val sessionById = sessions.associateBy { it.id }
         val builder = StringBuilder()
-        builder.append("session_id,timestamp,disease,result,confidence_percent,referral_flag,image_check\n")
+        builder.append("session_id,timestamp,disease,result,confidence_percent,referral_flag,image_check,input_mode,cells_detected\n")
         // Oldest session first (ids ascend with time), rows of one session adjacent.
         // Records with no matching session can't occur (foreign key) and are skipped.
         records
@@ -50,6 +52,12 @@ object CsvExporter {
                 builder.append(if (record.referralFlag) "yes" else "no")
                 builder.append(',')
                 builder.append(escapeCsv(session.guardrailResult))
+                builder.append(',')
+                // "field" = wide-field malaria (detect cells, classify each; confidence_percent is then the highest
+                // single-cell score); "image" = whole-image classification.
+                builder.append(if (record.wideField) "field" else "image")
+                builder.append(',')
+                builder.append(record.cellsDetected)
                 builder.append('\n')
             }
         return builder.toString()

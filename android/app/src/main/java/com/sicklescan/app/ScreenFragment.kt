@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.sicklescan.app.data.CaptureSession
 import com.sicklescan.app.data.LoggedResult
+import com.sicklescan.app.data.ScreeningRecord
 import com.sicklescan.app.data.ScreeningRepository
 import com.sicklescan.app.databinding.FragmentScreenBinding
 import com.sicklescan.app.databinding.ItemResultCardBinding
@@ -35,6 +36,17 @@ import java.io.IOException
  * run the selected model(s) sequentially against that SAME photo -> one result
  * card per condition. Each run is logged as one [CaptureSession] with 1-2
  * screening records. There is no auto-detection of which disease an image is for.
+ *
+ * The guardrail (Phase 7, retrained in Phase 14 to recognise BBBC041 wide-field fields and single-cell crops) runs ONCE, right
+ * after the photo is captured or picked, for every mode -- Sickle Cell, single-cell Malaria and wide-field Malaria alike: soft
+ * warning, Retake / Continue anyway, overridden sessions saved but excluded from the dashboard stats. (Phase 13 briefly skipped it
+ * for wide-field malaria while the old guardrail rejected those photos; that workaround is gone.) For wide-field malaria the
+ * 20-cell count gate remains as a secondary check.
+ *
+ * Phase 13: Malaria has two input modes the user picks between -- "wide field" (cell detector -> classify every
+ * cell -> any-cell rule, see [WideFieldMalariaPipeline]) and "single cell" (the original direct classification of
+ * one close-up cell). The wide-field detector cannot find a lone zoomed-in cell (0/200 in testing), so the two
+ * modes are deliberately separate.
  */
 class ScreenFragment : Fragment() {
 
@@ -47,6 +59,11 @@ class ScreenFragment : Fragment() {
     // failure for one model (e.g. a corrupt asset) doesn't block the other.
     private val classifiers = mutableMapOf<Disease, ImageClassifier>()
     private val classifierLoadFailed = mutableSetOf<Disease>()
+
+    // Phase 13 wide-field malaria: detector + classifier, loaded lazily on first use.
+    private var wideFieldPipeline: WideFieldMalariaPipeline? = null
+    private var wideFieldLoadFailed = false
+    private var wideFieldWarmedUp = false
 
     // Phase 7 guardrail: runs once per photo, before any disease model.
     private var guardrail: ImageClassifier? = null
@@ -111,7 +128,12 @@ class ScreenFragment : Fragment() {
 
         val updateAnalyze = { updateAnalyzeEnabled() }
         binding.checkSickleCell.setOnCheckedChangeListener { _, _ -> updateAnalyze() }
-        binding.checkMalaria.setOnCheckedChangeListener { _, _ -> updateAnalyze() }
+        binding.checkMalaria.setOnCheckedChangeListener { _, _ ->
+            updateMalariaModeUi()
+            updateAnalyze()
+        }
+        binding.malariaModeGroup.setOnCheckedChangeListener { _, _ -> updateMalariaModeUi() }
+        updateMalariaModeUi()
     }
 
     override fun onDestroyView() {
@@ -123,6 +145,7 @@ class ScreenFragment : Fragment() {
         super.onDestroy()
         classifiers.values.forEach { it.close() }
         guardrail?.close()
+        wideFieldPipeline?.close()
     }
 
     /** Lazily loads (and caches) the classifier for [disease]. Returns null if that
@@ -135,6 +158,22 @@ class ScreenFragment : Fragment() {
         } catch (e: ImageClassifier.ClassifierException) {
             Log.e(TAG, "Model load failed for $disease", e)
             classifierLoadFailed += disease
+            null
+        }
+    }
+
+    private fun getWideFieldPipeline(): WideFieldMalariaPipeline? {
+        wideFieldPipeline?.let { return it }
+        if (wideFieldLoadFailed) return null
+        return try {
+            WideFieldMalariaPipeline(requireContext()).also { wideFieldPipeline = it }
+        } catch (e: WideFieldMalariaPipeline.PipelineException) {
+            Log.e(TAG, "Wide-field pipeline load failed", e)
+            wideFieldLoadFailed = true
+            null
+        } catch (e: CellDetector.DetectorException) {
+            Log.e(TAG, "Cell detector load failed", e)
+            wideFieldLoadFailed = true
             null
         }
     }
@@ -175,7 +214,7 @@ class ScreenFragment : Fragment() {
         }
     }
 
-    /** New photo -> reset the flow and run the guardrail check ONCE for it. */
+    /** New photo -> reset the flow and run the guardrail check ONCE for it, whatever the mode. */
     private fun runGuardrail(bitmap: Bitmap) {
         val guard = getGuardrail()
         if (guard == null) {
@@ -222,6 +261,15 @@ class ScreenFragment : Fragment() {
         if (binding.checkMalaria.isChecked) add(Disease.MALARIA)
     }
 
+    private fun wideFieldSelected(): Boolean = binding.checkMalaria.isChecked && binding.radioWideField.isChecked
+
+    /** One condition's outcome. [result] is null only for a wide-field check that found no cells (nothing to log). */
+    private class Outcome(
+        val disease: Disease,
+        val result: ScreeningInterpreter.ScreeningResult?,
+        val wide: WideFieldMalariaPipeline.Output? = null,
+    )
+
     /** Runs the selected model(s) sequentially against the SAME bitmap, then logs one session. */
     private fun onAnalyzeClicked() {
         val bitmap = selectedBitmap
@@ -232,59 +280,130 @@ class ScreenFragment : Fragment() {
         }
         if (diseases.isEmpty() || guardrailState == GuardrailState.NONE) return
 
-        val loaded = diseases.map { it to getClassifier(it) }
-        if (loaded.any { it.second == null }) {
+        viewLifecycleOwner.lifecycleScope.launch { runAnalysis(bitmap, diseases) }
+    }
+
+    private suspend fun runAnalysis(bitmap: Bitmap, diseases: List<Disease>) {
+        val wide = wideFieldSelected()
+        // Which model each condition needs: the wide-field pipeline for wide-field malaria, else a plain classifier.
+        val pipeline = if (wide) getWideFieldPipeline() else null
+        val loaded = diseases.map { d -> d to (if (d == Disease.MALARIA && wide) null else getClassifier(d)) }
+        if ((wide && pipeline == null) || loaded.any { (d, c) -> c == null && !(d == Disease.MALARIA && wide) }) {
             showError(getString(R.string.error_model_load))
             return
         }
 
+        // The image check ran right after capture, for every mode: this session is accepted, or the user continued past a rejection.
         val overridden = guardrailState == GuardrailState.OVERRIDDEN
+        val sessionGuardrail = if (overridden) CaptureSession.GUARDRAIL_OVERRIDDEN else CaptureSession.GUARDRAIL_ACCEPTED
         binding.resultsContainer.removeAllViews()
         binding.crossDomainWarning.visibility = View.GONE
         binding.errorText.visibility = View.GONE
         setBusy(true, R.string.analyzing)
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val started = System.currentTimeMillis()
-                // Sequential, one image: no re-capture between models.
-                val outcomes = withContext(Dispatchers.Default) {
-                    loaded.map { (disease, classifier) ->
-                        disease to ScreeningInterpreter.interpret(disease, classifier!!.classify(bitmap))
+        try {
+            val started = System.currentTimeMillis()
+            // Sequential, one image: no re-capture between models.
+            val outcomes = withContext(Dispatchers.Default) {
+                loaded.map { (disease, classifier) ->
+                    if (disease == Disease.MALARIA && wide) {
+                        val out = pipeline!!.analyse(bitmap) { stage, done, total -> showProgress(stage, done, total) }
+                        Log.i(TAG, out.timings.let {
+                            "wide-field malaria: ${out.field.cellsAnalysed} cells, total ${it.totalMs} ms " +
+                                "(prepare ${it.prepareMs}, detect ${it.detectMs}, crop ${it.cropMs}, classify ${it.classifyMs})"
+                        })
+                        Outcome(disease, WideFieldMalaria.toScreeningResult(out.field), out)
+                    } else {
+                        Outcome(disease, ScreeningInterpreter.interpret(disease, classifier!!.classify(bitmap)))
                     }
                 }
-                val elapsed = System.currentTimeMillis() - started
-                if (elapsed < MIN_LOADING_MS) delay(MIN_LOADING_MS - elapsed)
+            }
+            val elapsed = System.currentTimeMillis() - started
+            if (elapsed < MIN_LOADING_MS) delay(MIN_LOADING_MS - elapsed)
 
-                // Only after every selected model succeeded: one session, 1-2 records, atomically.
+            // Only after every selected model succeeded: one session, 1-2 records, atomically. A wide-field check that
+            // returned no verdict (fewer than MIN_CELLS cells) is logged too, as an "inconclusive" record carrying its cell
+            // count, so count-gate Inconclusives are visible in the data (input mode: field, cell count recorded).
+            val toLog = outcomes.filter { it.result != null || it.wide != null }
+            if (toLog.isNotEmpty()) {
                 withContext(Dispatchers.IO) {
                     repository.logSession(
-                        guardrailResult = if (overridden) CaptureSession.GUARDRAIL_OVERRIDDEN else CaptureSession.GUARDRAIL_ACCEPTED,
-                        results = outcomes.map { (disease, result) ->
-                            LoggedResult(
-                                disease = disease,
-                                result = result.status.name.lowercase(),
-                                confidencePercent = result.confidencePercent,
-                                referralFlag = result.status != ScreeningInterpreter.Status.NEGATIVE,
-                            )
+                        guardrailResult = sessionGuardrail,
+                        results = toLog.map { o ->
+                            val result = o.result
+                            if (result != null) {
+                                LoggedResult(
+                                    disease = o.disease,
+                                    result = result.status.name.lowercase(),
+                                    confidencePercent = result.confidencePercent,
+                                    referralFlag = result.status != ScreeningInterpreter.Status.NEGATIVE,
+                                    wideField = o.wide != null,
+                                    cellsDetected = o.wide?.field?.cellsAnalysed ?: 0,
+                                )
+                            } else {
+                                val field = o.wide!!.field
+                                LoggedResult(
+                                    disease = o.disease,
+                                    result = ScreeningRecord.RESULT_INCONCLUSIVE,
+                                    confidencePercent = field.topCellScore * 100f,
+                                    referralFlag = false,
+                                    wideField = true,
+                                    cellsDetected = field.cellsAnalysed,
+                                )
+                            }
                         },
                         rejectionEventId = if (overridden) pendingRejectionId else null,
                     )
                 }
                 pendingRejectionId = null
+            }
 
-                outcomes.forEach { (disease, result) -> addResultCard(disease, result, overridden) }
-                binding.disclaimerText.visibility = View.GONE // each card carries its own disclaimer
-                // Shown on EVERY result screen that displays two conditions together (never blocks Both).
-                binding.crossDomainWarning.visibility =
-                    if (ResultsPresentation.showCrossDomainWarning(outcomes.map { it.first })) View.VISIBLE else View.GONE
-            } catch (e: ImageClassifier.ClassifierException) {
-                Log.e(TAG, "Inference failed", e)
-                showError(getString(R.string.error_inference))
-            } finally {
-                setBusy(false)
+            outcomes.forEach { addResultCard(it, overridden) }
+            binding.disclaimerText.visibility = View.GONE // each card carries its own disclaimer
+            // Shown on EVERY result screen that displays two conditions together (never blocks Both).
+            binding.crossDomainWarning.visibility =
+                if (ResultsPresentation.showCrossDomainWarning(outcomes.map { it.disease })) View.VISIBLE else View.GONE
+        } catch (e: ImageClassifier.ClassifierException) {
+            Log.e(TAG, "Inference failed", e)
+            showError(getString(R.string.error_inference))
+        } catch (e: WideFieldMalariaPipeline.PipelineException) {
+            Log.e(TAG, "Wide-field analysis failed", e)
+            showError(getString(R.string.error_inference))
+        } finally {
+            setBusy(false)
+        }
+    }
+
+    /** Progress text for the wide-field pipeline; called from the worker thread. */
+    private fun showProgress(stage: WideFieldMalariaPipeline.Stage, done: Int, total: Int) {
+        val text = when (stage) {
+            WideFieldMalariaPipeline.Stage.PREPARING -> getString(R.string.analyzing)
+            WideFieldMalariaPipeline.Stage.FINDING_CELLS -> getString(R.string.malaria_field_finding)
+            WideFieldMalariaPipeline.Stage.CHECKING_CELLS -> getString(R.string.malaria_field_checking, done, total)
+        }
+        activity?.runOnUiThread { _binding?.loadingText?.text = text }
+    }
+
+    /** Once per session, as soon as wide-field malaria is chosen: load the models and run them once so Analyze is not slow the first time. */
+    private fun warmUpWideFieldIfNeeded() {
+        if (wideFieldWarmedUp || !wideFieldSelected()) return
+        val pipeline = getWideFieldPipeline() ?: return
+        wideFieldWarmedUp = true
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            try {
+                pipeline.warmUp()
+            } catch (e: Exception) {
+                Log.w(TAG, "Wide-field warm-up failed (analysis will still work, just slower the first time)", e)
             }
         }
+    }
+
+    private fun updateMalariaModeUi() {
+        warmUpWideFieldIfNeeded()
+        val malaria = binding.checkMalaria.isChecked
+        binding.malariaModeGroup.visibility = if (malaria) View.VISIBLE else View.GONE
+        binding.malariaHint.visibility = if (malaria) View.VISIBLE else View.GONE
+        binding.malariaHint.setText(if (binding.radioSingleCell.isChecked) R.string.malaria_input_hint else R.string.malaria_hint_wide)
     }
 
     // --- Helpers ---
@@ -340,6 +459,7 @@ class ScreenFragment : Fragment() {
         binding.disclaimerText.visibility = View.VISIBLE
         binding.checkSickleCell.isChecked = false
         binding.checkMalaria.isChecked = false
+        binding.radioWideField.isChecked = true
     }
 
     private fun updateAnalyzeEnabled() {
@@ -347,31 +467,59 @@ class ScreenFragment : Fragment() {
     }
 
     /** One card per condition -- own confidence, referral status, disclaimer; never merged. */
-    private fun addResultCard(disease: Disease, result: ScreeningInterpreter.ScreeningResult, overridden: Boolean) {
+    private fun addResultCard(outcome: Outcome, overridden: Boolean) {
+        val disease = outcome.disease
+        val result = outcome.result
+        val wide = outcome.wide
         val card = ItemResultCardBinding.inflate(layoutInflater, binding.resultsContainer, false)
 
-        val (iconRes, colorRes, bgRes) = when (result.status) {
+        // result == null: a wide-field check that found no cells -> shown as inconclusive, styled like "uncertain".
+        val (iconRes, colorRes, bgRes) = when (result?.status) {
             ScreeningInterpreter.Status.POSITIVE ->
                 Triple(R.drawable.ic_status_positive, R.color.status_positive, R.color.status_positive_bg)
-            ScreeningInterpreter.Status.BORDERLINE ->
-                Triple(R.drawable.ic_status_borderline, R.color.status_borderline, R.color.status_borderline_bg)
             ScreeningInterpreter.Status.NEGATIVE ->
                 Triple(R.drawable.ic_status_negative, R.color.status_negative, R.color.status_negative_bg)
+            ScreeningInterpreter.Status.BORDERLINE, null ->
+                Triple(R.drawable.ic_status_borderline, R.color.status_borderline, R.color.status_borderline_bg)
         }
         val color = ContextCompat.getColor(requireContext(), colorRes)
 
         card.resultCard.setCardBackgroundColor(ContextCompat.getColor(requireContext(), bgRes))
-        card.diseaseTitle.text = disease.displayName
+        card.diseaseTitle.text = if (wide != null) getString(R.string.malaria_field_title) else disease.displayName
         card.resultIcon.setImageResource(iconRes)
         card.resultIcon.imageTintList = android.content.res.ColorStateList.valueOf(color)
 
-        // Result wording is always a screening indication, never a diagnosis.
-        card.resultLabel.text = getString(R.string.result_label_format, result.resultLabel)
-        card.resultLabel.setTextColor(color)
-        card.resultConfidence.text = getString(R.string.confidence_format, result.confidencePercent)
-        card.referralMessage.text = result.referralMessage
-        card.referralMessage.setTextColor(color)
-        card.overrideCaveat.visibility = if (overridden) View.VISIBLE else View.GONE
+        if (result == null) {
+            card.resultLabel.text = getString(R.string.malaria_no_cells_label)
+            card.resultLabel.setTextColor(color)
+            card.resultConfidence.visibility = View.GONE
+            card.referralMessage.text =
+                getString(R.string.malaria_too_few_cells_message, wide?.field?.cellsAnalysed ?: 0, WideFieldMalaria.MIN_CELLS)
+            card.referralMessage.setTextColor(color)
+        } else {
+            // Result wording is always a screening indication, never a diagnosis.
+            card.resultLabel.text = getString(R.string.result_label_format, result.resultLabel)
+            card.resultLabel.setTextColor(color)
+            card.resultConfidence.text =
+                if (wide != null) getString(R.string.malaria_field_top_score, result.confidencePercent)
+                else getString(R.string.confidence_format, result.confidencePercent)
+            card.referralMessage.text = result.referralMessage
+            card.referralMessage.setTextColor(color)
+        }
+        if (wide != null) {
+            val detail = getString(R.string.malaria_field_detail, wide.field.cellsAnalysed, wide.timings.totalMs / 1000.0)
+            card.resultDetail.text = if (result != null) {
+                detail + "\n" + getString(
+                    R.string.malaria_field_context,
+                    WideFieldMalaria.VALIDATED_SENSITIVITY_PERCENT, WideFieldMalaria.VALIDATED_FALSE_ALARM_PERCENT,
+                    WideFieldMalaria.MIN_CELLS,
+                )
+            } else {
+                detail
+            }
+            card.resultDetail.visibility = View.VISIBLE
+        }
+        card.overrideCaveat.visibility = if (overridden && result != null) View.VISIBLE else View.GONE
 
         binding.resultsContainer.addView(card.root)
     }

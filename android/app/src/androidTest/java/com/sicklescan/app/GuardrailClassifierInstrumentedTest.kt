@@ -48,7 +48,7 @@ class GuardrailClassifierInstrumentedTest {
 
     private fun smearProbability(classifier: ImageClassifier, assetPath: String): Float {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val bitmap = context.assets.open(assetPath).use { BitmapFactory.decodeStream(it) }
+        val bitmap = InstrumentationRegistry.getInstrumentation().context.assets.open(assetPath).use { BitmapFactory.decodeStream(it) }
         requireNotNull(bitmap) { "Failed to decode test asset $assetPath" }
         return classifier.classify(bitmap)
     }

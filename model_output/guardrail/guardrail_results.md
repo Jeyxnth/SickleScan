@@ -1,5 +1,7 @@
 # SickleScan — Guardrail Classifier Results (Phase 7)
 
+> **Superseded in the app by the Phase 14 retrain (`phase14b_guardrail_v3_results.md`)**, which adds BBBC041 wide-field and single-cell images to the smear class. The numbers below describe the original Phase 7 model.
+
 A binary "does this look like a blood smear photo?" pre-check that runs before either disease model. Output = P(smear); the app rejects (soft warning) when P(smear) < 0.5.
 
 ## What this model is — and is not (read first)

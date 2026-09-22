@@ -1,0 +1,26 @@
+set                                                              n | v1 (Phase 7, bundled)                  | v2 (retrained)                        
+BBBC041 held-out validation fields (163)                       163 | accepted 1/163 =   0.6% [0.1%-3.4%]    | accepted 163/163 = 100.0% [97.7%-100.0%]
+BBBC041 official test images (120, other microscope)           120 | accepted 56/120 =  46.7% [38.0%-55.6%] | accepted 118/120 =  98.3% [94.1%-99.5%]
+sickle-cell test images (held out)                              86 | accepted 86/86 = 100.0% [95.7%-100.0%] | accepted 86/86 = 100.0% [95.7%-100.0%]
+NIH single-cell malaria test images (held out)                 387 | accepted 387/387 = 100.0% [99.0%-100.0%] | accepted 387/387 = 100.0% [99.0%-100.0%]
+BBBC041 single-cell validation crops (1,823)                  1823 | accepted 144/1823 =   7.9% [6.7%-9.2%] | accepted 153/1823 =   8.4% [7.2%-9.8%]
+Phase 13 non-smear sample (360)                                600 | REJECTED 600/600 = 100.0% [99.4%-100.0%] | REJECTED 600/600 = 100.0% [99.4%-100.0%]
+all HELD-OUT real non-smear (guardrail val+test)               945 | REJECTED 944/945 =  99.9% [99.4%-100.0%] | REJECTED 943/945 =  99.8% [99.2%-99.9%]
+held-out synthetic capture failures (val+test)                  90 | REJECTED 90/90 = 100.0% [95.9%-100.0%] | REJECTED 90/90 = 100.0% [95.9%-100.0%]
+FRESH unseen non-smear (986)                                   986 | REJECTED 985/986 =  99.9% [99.4%-100.0%] | REJECTED 982/986 =  99.6% [99.0%-99.8%]
+
+Phase 13 sample (360): REJECTED counts by category / by guardrail data split
+  v1 (Phase 7, bundled): coco 60/60, documents 60/60, dtd 60/60, lfw 60/60, places 60/60, screenshots 60/60, synthetic_black 60/60, synthetic_blank 60/60, synthetic_blur 60/60, synthetic_finger 60/60
+    by split: train 420/420, val 96/96, test 84/84
+  v2 (retrained): coco 60/60, documents 60/60, dtd 60/60, lfw 60/60, places 60/60, screenshots 60/60, synthetic_black 60/60, synthetic_blank 60/60, synthetic_blur 60/60, synthetic_finger 60/60
+    by split: train 420/420, val 96/96, test 84/84
+
+v2 FALSE ACCEPTS (non-smear accepted, P(smear) >= 0.5):
+  [all HELD-OUT real non-smear (guardrail] data/guardrail/negatives/coco/0658.jpg  P(smear)=0.979   (v1: 0.977)
+  [all HELD-OUT real non-smear (guardrail] data/guardrail/negatives/dtd/0133.jpg  P(smear)=0.972   (v1: 0.011)
+  [FRESH unseen non-smear (986)] data\guardrail\fresh_negatives\dtd\0047.jpg  P(smear)=0.644   (v1: 0.000)
+  [FRESH unseen non-smear (986)] data\guardrail\fresh_negatives\dtd\0054.jpg  P(smear)=0.866   (v1: 0.000)
+  [FRESH unseen non-smear (986)] data\guardrail\fresh_negatives\dtd\0139.jpg  P(smear)=0.575   (v1: 0.000)
+  [FRESH unseen non-smear (986)] data\guardrail\fresh_negatives\dtd\0168.jpg  P(smear)=0.913   (v1: 0.447)
+
+P(smear) on the 163 BBBC fields: v1 median 0.006, v2 median 1.000; v2 min 0.945

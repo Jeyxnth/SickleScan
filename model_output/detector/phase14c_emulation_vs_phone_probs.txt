@@ -1,0 +1,28 @@
+image                                                  phone(app)  emulation  TF-preproc | |emulation-phone|  |TF-phone|
+guardrail_test_images__nonsmear_coco.jpg                  0.9946     0.9946     0.9939 | 0.00000   0.0007
+guardrail_test_images__nonsmear_documents.jpg             0.6052     0.6052     0.6034 | 0.00000   0.0018
+guardrail_test_images__nonsmear_lfw.jpg                   0.7240     0.7240     0.7073 | 0.00000   0.0167
+guardrail_test_images__nonsmear_places.jpg                0.9826     0.9826     0.9826 | 0.00000   0.0000
+guardrail_test_images__nonsmear_screenshots.jpg           0.3920     0.3920     0.4092 | 0.00000   0.0172
+guardrail_test_images__nonsmear_synthetic_finger.jpg      0.9215     0.9221     0.9168 | 0.00060   0.0047
+malaria_test_images__parasitized_1.png                    0.8515     0.8520     0.8061 | 0.00048   0.0454
+malaria_test_images__parasitized_2.png                    0.9815     0.9815     0.9716 | 0.00000   0.0099
+malaria_test_images__parasitized_3.png                    0.7666     0.7681     0.7425 | 0.00145   0.0241
+malaria_test_images__parasitized_misclassified.png        0.1233     0.1234     0.1061 | 0.00001   0.0172
+malaria_test_images__uninfected_1.png                     0.9835     0.9832     0.9795 | 0.00034   0.0040
+malaria_test_images__uninfected_2.png                     0.8811     0.8801     0.8707 | 0.00096   0.0104
+malaria_test_images__uninfected_3.png                     0.4058     0.4054     0.3410 | 0.00039   0.0647
+malaria_test_images__uninfected_4.png                     0.8202     0.8197     0.8127 | 0.00048   0.0075
+sample_test_images__neg_140.jpg                           0.1100     0.1106     0.1248 | 0.00054   0.0147
+sample_test_images__neg_46.jpg                            0.0170     0.0169     0.0178 | 0.00010   0.0008
+sample_test_images__pos_155.jpg                           0.9877     0.9879     0.9910 | 0.00019   0.0032
+sample_test_images__pos_20.jpg                            0.9686     0.9686     0.9646 | 0.00000   0.0040
+sample_test_images__pos_21.jpg                            0.7532     0.7532     0.7256 | 0.00000   0.0276
+sample_test_images__pos_213.jpg                           0.9792     0.9793     0.9793 | 0.00006   0.0000
+sample_test_images__pos_231.jpg                           0.9937     0.9937     0.9930 | 0.00002   0.0006
+sample_test_images__pos_325.jpg                           0.9837     0.9840     0.9849 | 0.00025   0.0012
+sample_test_images__pos_393.jpg                           0.9999     0.9999     0.9999 | 0.00000   0.0000
+sample_test_images__pos_64.jpg                            0.9919     0.9919     0.9914 | 0.00000   0.0004
+sample_test_images__pos_95.jpg                            0.9984     0.9984     0.9985 | 0.00000   0.0002
+
+max |emulation - phone| = 0.00145 ; max |TF - phone| = 0.0647

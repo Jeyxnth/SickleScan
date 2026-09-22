@@ -264,6 +264,45 @@ handful of the sample images (available under
 device/emulator gallery first), switch to the Dashboard tab, and tap
 Export CSV.
 
+## Phase 13 - wide-field malaria (detect cells, classify each, any-cell rule)
+
+Malaria now has two input modes, chosen under the Malaria checkbox:
+
+- **Wide field (default)** - `WideFieldMalariaPipeline`: letterbox the photo to 640 px -> `cell_detector.tflite` (CenterNet-style,
+  float16, fixed 640x640 input) -> one 224x224 crop per detected cell (taken from the working-resolution photo) -> the same
+  `malaria_model.tflite` classifier -> the field is **Positive if any cell scores >= 0.985**. Nothing leaves the device.
+  Operating point (held-out BBBC041 validation fields, thin smears, one stain protocol): about 90% of infected fields flagged
+  and about 18% of clean fields flagged; only 30 negative fields, so the false-alarm interval is wide (8-35%). If no cells are
+  found the result is "Inconclusive", never "Negative".
+- **Single cell (close-up)** - the original direct classification. The wide-field detector cannot find a lone zoomed-in cell
+  (0/200 in testing), so the two modes are kept separate.
+
+The image check (guardrail) runs once, right after the photo is captured or picked, for **every** mode including wide-field malaria
+(retrained in Phase 14 on BBBC041 wide-field fields and single-cell crops; see `model_output/guardrail/phase14b_guardrail_v3_results.md`,
+which also states the accepted residual risk of a small false-accept rate on texture/pattern images). Sessions are logged `accepted` or
+`overridden` as in every other mode. As a secondary check, fewer than 20 detected cells (count gate) returns **Inconclusive**, logged as
+`result = inconclusive`. Known limitation: 20 was tuned on dense lab-microscope
+BBBC041 fields and has not been validated on sparser phone-captured smears; see `model_output/detector/wide_field_results.md`.
+
+Logging follows the Phase 8 session/record pattern; DB v5 adds `wideField` and `cellsDetected` (real Migration 4->5), and the CSV
+gains `input_mode` and `cells_detected`. See `model_output/detector/phase13_report.md` for the verification numbers, the guardrail
+issue on wide-field photos, and how to measure real device latency:
+
+    adb push demo_images/wide_field_eval /sdcard/Android/data/com.sicklescan.app/files/wide_field_eval
+    ./gradlew connectedDebugAndroidTest --tests "*WideFieldPipelineInstrumentedTest"
+    adb logcat -d -s WideFieldEval
+
+The evaluation set is built by `scripts/detector/make_device_eval_set.py` from BBBC041 validation fields (CC BY-NC-SA 3.0, Jane
+Hung; cite Ljosa et al., Nature Methods 2012) and is not stored in the repo.
+
+## Phase 14d - classifier preprocessing now matches TensorFlow exactly
+
+The sickle-cell, single-cell malaria and guardrail classifiers resize with `ImageOps.resizeBilinearTf` (an exact float re-implementation of
+`tf.image.resize`, the call used in training and validation) instead of Android's `createScaledBitmap`, which is an 8-bit fixed-point
+bilinear that differed by about 0.5 gray level (moving one out-of-domain probability by 0.045). Verified against TensorFlow to 1.4e-5 over
+every evaluation set with zero decision changes; see `model_output/detector/phase14c_preprocessing_root_cause.md`. JPEG decoding still
+differs slightly between Android and TensorFlow (measured effect: a few thousandths of probability, no decision changes).
+
 ## Notes
 
 - TFLite input tensor is read from each model at load time (not

@@ -185,14 +185,38 @@
                     android:layout_height="wrap_content"
                     android:text="@string/disease_malaria" />
 
+                <!-- Phase 13: which kind of malaria photo this is. Shown only while Malaria is ticked. -->
+                <RadioGroup
+                    android:id="@+id/malariaModeGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.radiobutton.MaterialRadioButton
+                        android:id="@+id/radioWideField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/malaria_mode_wide" />
+
+                    <com.google.android.material.radiobutton.MaterialRadioButton
+                        android:id="@+id/radioSingleCell"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/malaria_mode_single" />
+                </RadioGroup>
+
                 <TextView
                     android:id="@+id/malariaHint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="32dp"
-                    android:text="@string/malaria_input_hint"
+                    android:text="@string/malaria_hint_wide"
                     android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="@color/disclaimer_gray" />
+                    android:textColor="@color/disclaimer_gray"
+                    android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAnalyze"

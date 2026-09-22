@@ -110,6 +110,51 @@ class DashboardAggregatorTest {
     }
 
     @Test
+    fun `wide-field malaria sessions that skipped the image check are counted like accepted ones, unlike overridden`() {
+        val now = System.currentTimeMillis()
+        val f = SessionFixture()
+        f.photo(now, Rec(mal, "positive", 99.6f, wideField = true, cells = 74), guardrail = CaptureSession.GUARDRAIL_SKIPPED)
+        f.photo(now, Rec(mal, "negative", 40f, wideField = true, cells = 60), guardrail = CaptureSession.GUARDRAIL_SKIPPED)
+        f.photo(now, Rec(sc, "negative"))
+        f.photo(now, Rec(mal, "positive"), guardrail = CaptureSession.GUARDRAIL_OVERRIDDEN)
+
+        val r = DashboardAggregator.compute(f.sessions, f.records, nowMillis = now)
+
+        assertEquals("skipped + accepted are counted, overridden is not", 3, r.sessionCount)
+        assertEquals(1, r.overriddenSessionCount)
+        val m = stats(Disease.MALARIA, r.perDisease)
+        assertEquals(2, m.total)
+        assertEquals(1, m.positiveCount)
+        assertEquals(1, m.negativeCount)
+        assertEquals("the flagged wide-field case reaches the weekly chart", 1, m.dailyCounts.sumOf { it.count })
+    }
+
+    @Test
+    fun `inconclusive wide-field checks are reported separately and never counted as outcomes`() {
+        val now = System.currentTimeMillis()
+        val f = SessionFixture()
+        val skipped = CaptureSession.GUARDRAIL_SKIPPED
+        f.photo(now, Rec(mal, "positive", 99.6f, wideField = true, cells = 74), guardrail = skipped)
+        f.photo(now, Rec(mal, ScreeningRecord.RESULT_INCONCLUSIVE, 68f, wideField = true, cells = 12), guardrail = skipped) // inconclusive only
+        f.photo(now, Rec(sc, "negative"), Rec(mal, ScreeningRecord.RESULT_INCONCLUSIVE, 0f, wideField = true, cells = 0), guardrail = skipped)
+
+        val r = DashboardAggregator.compute(f.sessions, f.records, nowMillis = now)
+
+        assertEquals("photos with at least one real outcome", 2, r.sessionCount)
+        assertEquals(2, r.inconclusiveChecks)
+        assertEquals(0, r.bothConditionsSessions)
+        assertEquals(2, r.conditionChecks)
+        val m = stats(Disease.MALARIA, r.perDisease)
+        assertEquals("only the real malaria outcome", 1, m.total)
+        assertEquals(1, m.positiveCount)
+        assertEquals(100f, m.positivePercent, 0.01f)
+        assertEquals(1, stats(Disease.SICKLE_CELL, r.perDisease).total)
+        // the reconciliation the dashboard prints still holds
+        assertEquals(r.sessionCount + r.bothConditionsSessions, r.conditionChecks)
+        assertEquals(r.conditionChecks, r.perDisease.sumOf { it.total })
+    }
+
+    @Test
     fun `daily counts include every case flagged for lab confirmation (positive and borderline), not negatives, per disease`() {
         val now = System.currentTimeMillis()
         val f = SessionFixture()

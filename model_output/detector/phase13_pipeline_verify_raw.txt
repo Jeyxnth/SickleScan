@@ -1,0 +1,19 @@
+2026-09-21 23:39:31.927876: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-09-21 23:39:32.345146: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+
+===== deployed pipeline, detector float16 + bundled float32 classifier =====
+  field max-score vs Keras reference (Phase 11c): mean|diff| 0.0142, max|diff| 0.638, decisions flipped at t=0.985: 0/163
+  image AUC 0.942 (reference 0.942)
+  this pipeline    @t=0.985: infected fields caught 120/133 = 90.2%, negative fields flagged 5/30 = 16.7%
+  Keras reference  @t=0.985: infected fields caught 120/133 = 90.2%, negative fields flagged 5/30 = 16.7%
+  cells per field: mean 75.5, max 183
+  DESKTOP CPU timing (not a phone): detector 85 ms/field, classifier one crop at a time 476 ms/field (6.3 ms/crop)
+
+===== deployed pipeline, detector float32 + bundled float32 classifier =====
+  field max-score vs Keras reference (Phase 11c): mean|diff| 0.0103, max|diff| 0.638, decisions flipped at t=0.985: 0/163
+  image AUC 0.941 (reference 0.942)
+  this pipeline    @t=0.985: infected fields caught 120/133 = 90.2%, negative fields flagged 5/30 = 16.7%
+  Keras reference  @t=0.985: infected fields caught 120/133 = 90.2%, negative fields flagged 5/30 = 16.7%
+  cells per field: mean 75.5, max 182
+  DESKTOP CPU timing (not a phone): detector 85 ms/field, classifier one crop at a time 471 ms/field (6.2 ms/crop)

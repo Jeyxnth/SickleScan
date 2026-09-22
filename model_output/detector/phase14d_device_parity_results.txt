@@ -1,0 +1,42 @@
+set / model                                                    n | |dP| phone-vs-TF mean    max   >0.01 | flips@0.5 | status changes | phone ms/image
+25 test assets / sickle                                       25 | 0.003101 0.03182      2 |     0     |       0        | 51.7
+25 test assets / malaria                                      25 | 0.002982 0.03016      2 |     0     |       0        | 46.7
+25 test assets / guardrail                                    25 | 0.000464 0.01133      1 |     0     |       -        | 45.9
+sickle images (569) / sickle                                 569 | 0.004542 0.09225     72 |     3     |       3        | 44.0
+NIH single-cell test crops (387) / malaria                   387 | 0.000000 0.00001      0 |     0     |       0        | 39.2
+NIH single-cell test crops (387) / guardrail                 387 | 0.000000 0.00000      0 |     0     |       -        | 39.5
+BBBC fields (163) / guardrail                                163 | 0.000000 0.00000      0 |     0     |       -        | 48.5
+BBBC official test images (120) / guardrail                  120 | 0.011095 0.08337     38 |     1     |       -        | 47.7
+held-out non-smear (945) / guardrail                         945 | 0.000174 0.05655      4 |     0     |       -        | 46.5
+fresh non-smear (986) / guardrail                            986 | 0.000115 0.02687      4 |     0     |       -        | 49.3
+BBBC single-cell crops 224x224 (200) / malaria               200 | 0.000000 0.00000      0 |     0     |       0        | 48.8
+BBBC single-cell crops 224x224 (200) / guardrail             200 | 0.000000 0.00000      0 |     0     |       -        | 49.6
+
+sickle model on the 25 test assets, phone P: OLD Android resize vs NEW exact resize vs TensorFlow reference
+  assets/guardrail_test_images__nonsmear_coco.jpg            old 0.9946  new 0.9944  TF 0.9939   |new-TF| 0.0005
+  assets/guardrail_test_images__nonsmear_documents.jpg       old 0.6052  new 0.6065  TF 0.6034   |new-TF| 0.0032
+  assets/guardrail_test_images__nonsmear_lfw.jpg             old 0.7240  new 0.7106  TF 0.7073   |new-TF| 0.0032
+  assets/guardrail_test_images__nonsmear_places.jpg          old 0.9826  new 0.9829  TF 0.9826   |new-TF| 0.0003
+  assets/guardrail_test_images__nonsmear_screenshots.jpg     old 0.3920  new 0.3960  TF 0.4092   |new-TF| 0.0132
+  assets/guardrail_test_images__nonsmear_synthetic_finger.jpg old 0.9215  new 0.9239  TF 0.9168   |new-TF| 0.0072
+  assets/malaria_test_images__parasitized_1.png              old 0.8515  new 0.8061  TF 0.8061   |new-TF| 0.0000
+  assets/malaria_test_images__parasitized_2.png              old 0.9815  new 0.9716  TF 0.9716   |new-TF| 0.0000
+  assets/malaria_test_images__parasitized_3.png              old 0.7666  new 0.7425  TF 0.7425   |new-TF| 0.0000
+  assets/malaria_test_images__parasitized_misclassified.png  old 0.1233  new 0.1061  TF 0.1061   |new-TF| 0.0000
+  assets/malaria_test_images__uninfected_1.png               old 0.9835  new 0.9795  TF 0.9795   |new-TF| 0.0000
+  assets/malaria_test_images__uninfected_2.png               old 0.8811  new 0.8707  TF 0.8707   |new-TF| 0.0000
+  assets/malaria_test_images__uninfected_3.png               old 0.4058  new 0.3410  TF 0.3410   |new-TF| 0.0000
+  assets/malaria_test_images__uninfected_4.png               old 0.8202  new 0.8127  TF 0.8127   |new-TF| 0.0000
+  assets/sample_test_images__neg_140.jpg                     old 0.1100  new 0.1178  TF 0.1248   |new-TF| 0.0070
+  assets/sample_test_images__neg_46.jpg                      old 0.0170  new 0.0166  TF 0.0178   |new-TF| 0.0012
+  assets/sample_test_images__pos_155.jpg                     old 0.9877  new 0.9895  TF 0.9910   |new-TF| 0.0014
+  assets/sample_test_images__pos_20.jpg                      old 0.9686  new 0.9677  TF 0.9646   |new-TF| 0.0030
+  assets/sample_test_images__pos_21.jpg                      old 0.7532  new 0.7574  TF 0.7256   |new-TF| 0.0318
+  assets/sample_test_images__pos_213.jpg                     old 0.9792  new 0.9769  TF 0.9793   |new-TF| 0.0023
+  assets/sample_test_images__pos_231.jpg                     old 0.9937  new 0.9944  TF 0.9930   |new-TF| 0.0014
+  assets/sample_test_images__pos_325.jpg                     old 0.9837  new 0.9840  TF 0.9849   |new-TF| 0.0009
+  assets/sample_test_images__pos_393.jpg                     old 0.9999  new 0.9999  TF 0.9999   |new-TF| 0.0000
+  assets/sample_test_images__pos_64.jpg                      old 0.9919  new 0.9923  TF 0.9914   |new-TF| 0.0008
+  assets/sample_test_images__pos_95.jpg                      old 0.9984  new 0.9984  TF 0.9985   |new-TF| 0.0001
+
+phase14c target image (parasitized_1 on the sickle model): NEW on phone 0.8061 | TensorFlow 0.8061 | old 0.8515

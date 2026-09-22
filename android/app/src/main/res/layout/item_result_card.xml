@@ -62,6 +62,16 @@
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:textStyle="bold" />
 
+        <!-- Wide-field malaria: cells analysed, timing, and the validated sensitivity / false-alarm context. -->
+        <TextView
+            android:id="@+id/resultDetail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="@color/result_text_dark"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/overrideCaveat"
             android:layout_width="match_parent"

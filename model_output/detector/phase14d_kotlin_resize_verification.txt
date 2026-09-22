@@ -1,0 +1,24 @@
+  done 25 test assets: 25 images x ['sickle', 'malaria', 'guardrail']
+  done sickle images (569): 569 images x ['sickle']
+  done NIH single-cell test crops (387): 387 images x ['malaria', 'guardrail']
+  done BBBC single-cell crops 224x224 (200): 200 images x ['malaria', 'guardrail']
+  done BBBC held-out fields (163): 163 images x ['guardrail']
+  done BBBC official test images (120): 120 images x ['guardrail']
+  done held-out non-smear (945): 945 images x ['guardrail']
+  done fresh non-smear (986): 986 images x ['guardrail']
+
+set / model                                                  n | |dP| mean    max   >0.001 | decision flips@0.5 | app status changes
+25 test assets / sickle                                     25 | 0.000001 0.000003      0 |         0          | 0
+25 test assets / malaria                                    25 | 0.000001 0.000006      0 |         0          | 0
+25 test assets / guardrail                                  25 | 0.000000 0.000012      0 |         0          | -
+sickle images (569) / sickle                               569 | 0.000001 0.000010      0 |         0          | 0
+NIH single-cell test crops (387) / malaria                 387 | 0.000000 0.000005      0 |         0          | 0
+NIH single-cell test crops (387) / guardrail               387 | 0.000000 0.000000      0 |         0          | -
+BBBC single-cell crops 224x224 (200) / malaria             200 | 0.000000 0.000000      0 |         0          | 0
+BBBC single-cell crops 224x224 (200) / guardrail           200 | 0.000000 0.000000      0 |         0          | -
+BBBC held-out fields (163) / guardrail                     163 | 0.000000 0.000002      0 |         0          | -
+BBBC official test images (120) / guardrail                120 | 0.000002 0.000014      0 |         0          | -
+held-out non-smear (945) / guardrail                       945 | 0.000000 0.000004      0 |         0          | -
+fresh non-smear (986) / guardrail                          986 | 0.000000 0.000009      0 |         0          | -
+
+phase14c test image (parasitized_1.png) on the SICKLE model: TensorFlow preprocessing 0.8061 | new Kotlin preprocessing 0.8061 | (old Android resize on the phone: 0.8515)

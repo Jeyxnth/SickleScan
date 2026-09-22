@@ -1,0 +1,6 @@
+test split: 86 images (64 positive, 22 negative)
+TensorFlow preprocessing (README's current numbers): accuracy 94.1860%  sensitivity 93.7500%  specificity 95.4545%  (TP=60 TN=21 FP=1 FN=4)
+Phone / new resize (as the app now behaves): accuracy 93.0233%  sensitivity 92.1875%  specificity 95.4545%  (TP=59 TN=21 FP=1 FN=5)
+
+images whose test-set decision changes (1):
+  data\raw\Positive\Unlabelled\306.jpg (true label positive): TensorFlow 0.5220 -> phone 0.4765

@@ -71,7 +71,7 @@ class DashboardFragment : Fragment() {
 
             if (_binding == null) return@launch // view may be gone by the time this resumes
 
-            if (stats.sessionCount == 0 && stats.overriddenSessionCount == 0) {
+            if (stats.sessionCount == 0 && stats.overriddenSessionCount == 0 && stats.inconclusiveChecks == 0) {
                 binding.emptyText.visibility = View.VISIBLE
                 binding.totalText.visibility = View.GONE
                 binding.sessionsDetailText.visibility = View.GONE
@@ -91,6 +91,9 @@ class DashboardFragment : Fragment() {
             }
             if (stats.overriddenSessionCount > 0) {
                 details += getString(R.string.dashboard_sessions_overridden_format, stats.overriddenSessionCount)
+            }
+            if (stats.inconclusiveChecks > 0) {
+                details += getString(R.string.dashboard_inconclusive_format, stats.inconclusiveChecks)
             }
             binding.sessionsDetailText.text = details.joinToString("\n")
             binding.sessionsDetailText.visibility = if (details.isEmpty()) View.GONE else View.VISIBLE

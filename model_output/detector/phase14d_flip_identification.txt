@@ -1,0 +1,15 @@
+=== sickle model on all 569 sickle images: which image(s) flip / change status, and are they in the reported 86-image test set? ===
+loaded data/splits/{train,val,test}.csv: 569 images (train 398, val 85, test 86)
+decision flips (n=3):
+  [train] data/raw/Positive/Unlabelled\117.jpg: TensorFlow 0.4922 -> phone(new) 0.5129
+  [train] data/raw/Positive/Unlabelled\132.jpg: TensorFlow 0.5038 -> phone(new) 0.4779
+  [test] data/raw/Positive/Unlabelled\306.jpg: TensorFlow 0.5220 -> phone(new) 0.4765
+status changes (n=3):
+  [val] data/raw/Negative/Clear\10.jpg: TensorFlow 0.3177 (negative) -> phone(new) 0.3506 (borderline)
+  [train] data/raw/Negative/Clear\103.jpg: TensorFlow 0.3618 (borderline) -> phone(new) 0.2955 (negative)
+  [train] data/raw/Negative/Clear\53.jpg: TensorFlow 0.3787 (borderline) -> phone(new) 0.3473 (negative)
+
+any flip or status change landing in the TEST split (the reported 86-image accuracy/sensitivity/specificity): YES -- reported numbers would change
+
+=== guardrail on the 120 official BBBC test images: which image flips? ===
+  FLIP: data/bbbc041/raw/malaria/images/78ae52cf-8dad-4070-a40e-9af02faec1f0.jpg: TensorFlow 0.5198 -> phone(new) 0.4709  (this changes the 'accepted' count for this set by 1)

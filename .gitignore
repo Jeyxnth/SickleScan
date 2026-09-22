@@ -32,3 +32,11 @@ data/tiling_validation/**/*.gif
 data/tiling_validation/**/*.bmp
 data/tiling_validation/**/*.tif
 data/tiling_validation/**/*.tiff
+
+# Phase 11a: overlays derived from user photos / BBBC041 / third-party fields stay local
+model_output/detector/*.png
+
+# Phase 14: third-party / BBBC041-derived images stay local
+data/guardrail/fresh_negatives/
+data/guardrail/bbbc_crops/
+model_output/guardrail/*.png

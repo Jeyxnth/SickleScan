@@ -1,0 +1,19 @@
+2026-09-22 01:49:37.255251: W tensorflow/core/kernels/data/prefetch_autotuner.cc:52] Prefetch autotuner tried to allocate 38535168 bytes after encountering the first element of size 38535168 bytes.This already causes the autotune ram budget to be exceeded. To stay within the ram budget, either increase the ram budget or reduce element size
+set                                                                  want | v1                                 | v2                                 | v3                                
+BBBC041 held-out validation fields (163)                           accept | 1/163 =   0.6% [0.1%-3.4%]         | 163/163 = 100.0% [97.7%-100.0%]    | 163/163 = 100.0% [97.7%-100.0%]   
+BBBC041 official test images (120, other microscope)               accept | 56/120 =  46.7% [38.0%-55.6%]      | 118/120 =  98.3% [94.1%-99.5%]     | 111/120 =  92.5% [86.4%-96.0%]    
+sickle-cell test images (86, held out)                             accept | 86/86 = 100.0% [95.7%-100.0%]      | 86/86 = 100.0% [95.7%-100.0%]      | 86/86 = 100.0% [95.7%-100.0%]     
+NIH single-cell malaria test images (387, held out)                accept | 387/387 = 100.0% [99.0%-100.0%]    | 387/387 = 100.0% [99.0%-100.0%]    | 387/387 = 100.0% [99.0%-100.0%]   
+BBBC041 single-cell VALIDATION crops (1,823)                       accept | 144/1823 =   7.9% [6.7%-9.2%]      | 153/1823 =   8.4% [7.2%-9.8%]      | 1822/1823 =  99.9% [99.7%-100.0%] 
+BBBC041 single-cell official-TEST crops (5,917, other microscope)  accept | 378/5917 =   6.4% [5.8%-7.0%]      | 222/5917 =   3.8% [3.3%-4.3%]      | 2508/5917 =  42.4% [41.1%-43.7%]  
+Phase 13 sample, natural only (360; ~70% were in training)         reject | 360/360 = 100.0% [98.9%-100.0%]    | 360/360 = 100.0% [98.9%-100.0%]    | 360/360 = 100.0% [98.9%-100.0%]   
+Phase 13 sample, synthetic capture failures (240)                  reject | 240/240 = 100.0% [98.4%-100.0%]    | 240/240 = 100.0% [98.4%-100.0%]    | 240/240 = 100.0% [98.4%-100.0%]   
+HELD-OUT real non-smear (guardrail val+test, 945)                  reject | 944/945 =  99.9% [99.4%-100.0%]    | 943/945 =  99.8% [99.2%-99.9%]     | 943/945 =  99.8% [99.2%-99.9%]    
+FRESH unseen non-smear (986)                                       reject | 985/986 =  99.9% [99.4%-100.0%]    | 982/986 =  99.6% [99.0%-99.8%]     | 985/986 =  99.9% [99.4%-100.0%]   
+
+FALSE ACCEPTS on all UNSEEN non-smear (held-out real + fresh = 1931): v1 2 (0.10%), v2 6 (0.31%), v3 3 (0.16%)
+
+FALSE ACCEPTS by the last model listed (P(smear) per model):
+  data/guardrail/negatives/dtd/0350.jpg  v1=0.001  v2=0.352  v3=0.935
+  data/guardrail/negatives/dtd/0133.jpg  v1=0.011  v2=0.972  v3=0.807
+  data\guardrail\fresh_negatives\dtd\0059.jpg  v1=0.000  v2=0.390  v3=0.815

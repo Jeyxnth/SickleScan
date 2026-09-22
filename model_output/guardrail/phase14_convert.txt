@@ -1,0 +1,8 @@
+2026-09-22 01:10:17.399382: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-09-22 01:10:17.812790: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+  args_0 (POSITIONAL_ONLY): TensorSpec(shape=(None, 224, 224, 3), dtype=tf.float32, name='input_layer_1')
+  TensorSpec(shape=(None, 1), dtype=tf.float32, name=None)
+{'float16': '4.79 MB', 'float32': '9.52 MB'}
+2777 images (163 BBBC fields, 120 BBBC test, guardrail test split, non-smear val split, 986 fresh non-smear)
+  float16: decisions differing from Keras at 0.5: 1/2777; max |P diff| 0.0256, mean 0.000132
+  float32: decisions differing from Keras at 0.5: 0/2777; max |P diff| 0.0000, mean 0.000000

@@ -1,5 +1,6 @@
 package com.sicklescan.app.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -33,6 +34,21 @@ data class ScreeningRecord(
     val disease: String,
     /** "positive" / "borderline" / "negative" -- matches ScreeningInterpreter.Status. */
     val result: String,
+    /** Single-cell path: model confidence in the stated result. Wide-field path: the highest single-cell score. */
     val confidencePercent: Float,
     val referralFlag: Boolean,
-)
+    /** Phase 13: true for a wide-field malaria check (detect cells, classify each, any-cell rule); false for a direct
+     * whole-image classification. Added in DB v5 with a default, so older rows read as false. */
+    @ColumnInfo(defaultValue = "0") val wideField: Boolean = false,
+    /** Phase 13: cells the detector found and the classifier scored (0 for direct classification). */
+    @ColumnInfo(defaultValue = "0") val cellsDetected: Int = 0,
+) {
+    companion object {
+        /**
+         * Phase 13: a wide-field check that returned no verdict because fewer than WideFieldMalaria.MIN_CELLS cells were
+         * detected (cellsDetected says how many, 0 included). Logged so it is visible in the data; it is not a screening
+         * outcome, so the dashboard keeps it out of the positive / negative / borderline statistics.
+         */
+        const val RESULT_INCONCLUSIVE = "inconclusive"
+    }
+}

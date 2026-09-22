@@ -6,23 +6,31 @@ Test set size: 86 images (held out, stratified 15% split)
 
 ## Confusion Matrix
 
+**On-device (real phone, measured — see footnote¹):**
+
 | | Predicted Negative | Predicted Positive |
 |---|---|---|
 | **Actual Negative** | 21 (TN) | 1 (FP) |
-| **Actual Positive** | 4 (FN) | 60 (TP) |
+| **Actual Positive** | 5 (FN) | 59 (TP) |
 
 ## Headline Metrics
 
-- **Accuracy:** 0.9419 (94.19%)
-- **Sensitivity / Recall (positive/sickle class):** 0.9375 (93.75%) — of all truly positive samples, this fraction was correctly flagged.
+- **Accuracy:** 0.9302 (93.02%)¹
+- **Sensitivity / Recall (positive/sickle class):** 0.9219 (92.19%)¹ — of all truly positive samples, this fraction was correctly flagged.
 - **Specificity (negative class recall):** 0.9545 (95.45%) — of all truly negative samples, this fraction was correctly cleared.
+
+¹ Measured on-device (real phone, not desktop) on these same 86 test images. The figure computed with the Python/TensorFlow preprocessing this model was originally validated with is accuracy 0.9419 (94.19%), sensitivity 0.9375 (93.75%), confusion matrix TN 21 / FP 1 / FN 4 / TP 60 — the difference is one boundary-adjacent test image (`306.jpg`) where Android's JPEG decoder produces slightly different pixels than TensorFlow's, not a resize or model issue; see `detector/phase14c_preprocessing_root_cause.md`.
 
 ## Per-class Precision / Recall / F1
 
+**On-device (measured):**
+
 | Class | Precision | Recall | F1 |
 |---|---|---|---|
-| negative | 0.8400 | 0.9545 | 0.8936 |
-| positive | 0.9836 | 0.9375 | 0.9600 |
+| negative | 0.8077 | 0.9545 | 0.8750 |
+| positive | 0.9833 | 0.9219 | 0.9516 |
+
+Original (Python/TensorFlow preprocessing): negative 0.8400 / 0.9545 / 0.8936; positive 0.9836 / 0.9375 / 0.9600.
 
 ## TFLite Conversion
 

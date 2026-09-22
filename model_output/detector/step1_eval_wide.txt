@@ -1,0 +1,6 @@
+##### baseline (crop padding 1.15) -- 133 infected fields, 30 negative fields
+ detector thr 0.3, box de-dup off: image AUC 0.942 | @0.5: per-cell flag on neg fields 39/2096 = 1.86%, neg fields flagged 15/30 (50%), pos fields caught 131/133 (98%) | diag (in-sample thr): sens>=90% -> min neg-flag 17% at t=0.985
+ detector thr 0.3, box de-dup ON : image AUC 0.944 | @0.5: per-cell flag on neg fields 36/2069 = 1.74%, neg fields flagged 15/30 (50%), pos fields caught 131/133 (98%) | diag (in-sample thr): sens>=90% -> min neg-flag 17% at t=0.985
+##### wide (crop padding 2.0) -- 133 infected fields, 30 negative fields
+ detector thr 0.3, box de-dup off: image AUC 0.936 | @0.5: per-cell flag on neg fields 34/2096 = 1.62%, neg fields flagged 18/30 (60%), pos fields caught 129/133 (97%) | diag (in-sample thr): sens>=90% -> min neg-flag 13% at t=0.942
+ detector thr 0.3, box de-dup ON : image AUC 0.936 | @0.5: per-cell flag on neg fields 32/2069 = 1.55%, neg fields flagged 18/30 (60%), pos fields caught 129/133 (97%) | diag (in-sample thr): sens>=90% -> min neg-flag 13% at t=0.942

@@ -1,0 +1,7 @@
+sickle    PNG  n= 8: expected phone-vs-TensorFlow |dP| mean 0.00000 max 0.00000, decision flips 0
+sickle    JPEG n=17: expected phone-vs-TensorFlow |dP| mean 0.00456 max 0.03182, decision flips 0
+malaria   PNG  n= 8: expected phone-vs-TensorFlow |dP| mean 0.00000 max 0.00000, decision flips 0
+malaria   JPEG n=17: expected phone-vs-TensorFlow |dP| mean 0.00438 max 0.03016, decision flips 0
+guardrail PNG  n= 8: expected phone-vs-TensorFlow |dP| mean 0.00000 max 0.00000, decision flips 0
+guardrail JPEG n=17: expected phone-vs-TensorFlow |dP| mean 0.00068 max 0.01135, decision flips 0
+parasitized_1 on the sickle model, expected on the phone after the fix: 0.8061 (TensorFlow 0.8061, old phone 0.8515)

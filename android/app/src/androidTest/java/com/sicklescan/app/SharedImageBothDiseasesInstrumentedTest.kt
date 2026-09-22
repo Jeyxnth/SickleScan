@@ -39,7 +39,7 @@ class SharedImageBothDiseasesInstrumentedTest {
         val malaria = ImageClassifier(context, Disease.MALARIA)
         try {
             expected.forEach { (asset, want) ->
-                val bitmap = context.assets.open(asset).use { BitmapFactory.decodeStream(it) }
+                val bitmap = InstrumentationRegistry.getInstrumentation().context.assets.open(asset).use { BitmapFactory.decodeStream(it) }
                 requireNotNull(bitmap) { "Failed to decode $asset" }
 
                 assertTrue("guardrail should accept $asset", GuardrailInterpreter.looksLikeSmear(guardrail.classify(bitmap)))

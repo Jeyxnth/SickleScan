@@ -1,0 +1,8 @@
+200 single-cell validation images (100 infected, 100 uninfected RBC), letterboxed to 640
+detections per image: mean 0.12, zero detections 181/200, exactly one 15, >=2 4
+the ONE cell found (a detection with IoU >= 0.5 against the true cell box): 0/200 = 0%; found as the only detection: 0/200
+classification of the same images:
+  direct single-cell path (existing)               infected called positive at 0.5: 97/100, uninfected called positive: 2/100
+  detector -> crop -> classify (max over cells)    infected called positive at 0.5: 0/100, uninfected called positive: 0/100
+  images where the two paths disagree at 0.5: 99/200
+local demo crops (12): detections per image [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]

@@ -38,11 +38,13 @@ Both models use transfer learning on MobileNetV2, exported to TensorFlow Lite wi
 |---|---|---|
 | Dataset size | 569 images (422 positive / 147 negative) | 27,558 images (balanced) |
 | Test set size | 86 images | 4,134 images |
-| Accuracy | 94.19% | 96.30% |
-| Sensitivity (recall) | 93.75% | 94.34% |
+| Accuracy | 93.02%¹ | 96.30% |
+| Sensitivity (recall) | 92.19%¹ | 94.34% |
 | Specificity | 95.45% | 98.26% |
 | Model size (TFLite, float16) | 4.6 MB | 4.6 MB |
 | Referral threshold | <65% confidence → borderline/refer | <65% confidence → borderline/refer |
+
+¹ Measured on-device (real phone, not desktop) on the 86-image sickle-cell test set. The figure computed with the Python/TensorFlow preprocessing the model was validated with is 94.19% accuracy / 93.75% sensitivity; the difference is one boundary-adjacent test image where Android's JPEG decoder produces slightly different pixels than TensorFlow's, not a resize or model issue — see `model_output/detector/phase14c_preprocessing_root_cause.md`.
 
 The 65% confidence threshold was independently validated for each model, not copied from one to the other — for malaria specifically, accuracy below the threshold is 58.4% (near coin-flip) versus 97.4% at or above it. Full breakdowns are in `model_output/*/results.md`.
 

@@ -1,0 +1,21 @@
+Classifier>=0.5 detections on the 30 negative val fields, by what they overlap: {'labelled RBC': 26, 'leukocyte': 0, 'no labelled cell (IoU<0.3)': 15}
+scores of flagged cells per flagged field: [[0.8199999928474426], [1.0, 0.9800000190734863], [0.9800000190734863, 0.699999988079071, 0.5199999809265137], [0.6800000071525574], [1.0], [0.9200000166893005, 0.8899999856948853], [0.550000011920929, 0.5099999904632568], [0.9900000095367432, 0.9900000095367432, 0.949999988079071, 0.8500000238418579, 0.5099999904632568], [0.5199999809265137], [0.7400000095367432, 0.6899999976158142, 0.5699999928474426, 0.5199999809265137], [0.9399999976158142, 0.6499999761581421, 0.6200000047683716, 0.5400000214576721], [0.8700000047683716], [1.0, 1.0, 0.9700000286102295, 0.7900000214576721, 0.5799999833106995], [0.8700000047683716, 0.7900000214576721], [1.0, 0.9800000190734863, 0.8799999952316284], [0.949999988079071, 0.6200000047683716]]
+Same-domain sensitivity: 133 BBBC041 val fields containing infected cells (held out)
+detector thr 0.2:
+   rule 'any cell >= 0.5': positive fields caught 131/133 = 98% | negative fields flagged 16/30 = 53%
+   rule 'any cell >= 0.9': positive fields caught 125/133 = 94% | negative fields flagged 9/30 = 30%
+   rule '>=2 cells >= 0.5': positive fields caught 108/133 = 81% | negative fields flagged 11/30 = 37%
+   rule '>=3 cells >= 0.5': positive fields caught 80/133 = 60% | negative fields flagged 6/30 = 20%
+   rule '>=1 cell >= 0.9 or >=3 >= 0.5': positive fields caught 126/133 = 95% | negative fields flagged 10/30 = 33%
+detector thr 0.3:
+   rule 'any cell >= 0.5': positive fields caught 131/133 = 98% | negative fields flagged 15/30 = 50%
+   rule 'any cell >= 0.9': positive fields caught 124/133 = 93% | negative fields flagged 9/30 = 30%
+   rule '>=2 cells >= 0.5': positive fields caught 107/133 = 80% | negative fields flagged 11/30 = 37%
+   rule '>=3 cells >= 0.5': positive fields caught 78/133 = 59% | negative fields flagged 6/30 = 20%
+   rule '>=1 cell >= 0.9 or >=3 >= 0.5': positive fields caught 125/133 = 94% | negative fields flagged 10/30 = 33%
+detector thr 0.4:
+   rule 'any cell >= 0.5': positive fields caught 129/133 = 97% | negative fields flagged 13/30 = 43%
+   rule 'any cell >= 0.9': positive fields caught 122/133 = 92% | negative fields flagged 9/30 = 30%
+   rule '>=2 cells >= 0.5': positive fields caught 104/133 = 78% | negative fields flagged 10/30 = 33%
+   rule '>=3 cells >= 0.5': positive fields caught 73/133 = 55% | negative fields flagged 5/30 = 17%
+   rule '>=1 cell >= 0.9 or >=3 >= 0.5': positive fields caught 123/133 = 92% | negative fields flagged 9/30 = 30%

@@ -1,0 +1,27 @@
+== threshold selection on validation (181 images) ==
+  heat = 1 / (1 + np.exp(-out[..., 0]))
+thr 0.5: infected recall 74.9%, all 87.0%, unmatched 10.6%
+thr 0.4: infected recall 83.4%, all 90.9%, unmatched 13.8%
+thr 0.3: infected recall 87.6%, all 92.6%, unmatched 16.2%
+thr 0.2: infected recall 90.9%, all 93.4%, unmatched 18.8%
+thr 0.1: infected recall 91.2%, all 93.6%, unmatched 22.7%
+chosen threshold (highest with val infected recall >= 90%): 0.2
+
+== VALIDATION (thr 0.2) ==
+  recall ALL cells   IoU>=0.5: 11422/12231 = 93.4% | centre-in-box: 12159/12231 = 99.4%
+  recall INFECTED    IoU>=0.5: 279/307 = 90.9% | centre-in-box: 304/307 = 99.0%
+  recall uninfected  IoU>=0.5: 11143/11924 = 93.5% | centre-in-box: 11855/11924 = 99.4%
+  detections 13774, unmatched (IoU<0.5 with any labelled cell) 2590 = 18.8% (unlabelled leukocytes / partial cells count here)
+
+== OFFICIAL TEST, all 120 images (different microscope setup; thr 0.2) ==
+  recall ALL cells   IoU>=0.5: 5389/5922 = 91.0% | centre-in-box: 5597/5922 = 94.5%
+  recall INFECTED    IoU>=0.5: 284/303 = 93.7% | centre-in-box: 292/303 = 96.4%
+  recall uninfected  IoU>=0.5: 5105/5619 = 90.9% | centre-in-box: 5305/5619 = 94.4%
+  detections 6310, unmatched (IoU<0.5 with any labelled cell) 910 = 14.4% (unlabelled leukocytes / partial cells count here)
+
+== SAME 30 TEST IMAGES AS PHASE 9b HEURISTIC RUN (thr 0.2) ==
+  recall ALL cells   IoU>=0.5: 1362/1453 = 93.7% | centre-in-box: 1398/1453 = 96.2%
+  recall INFECTED    IoU>=0.5: 78/81 = 96.3% | centre-in-box: 78/81 = 96.3%
+  recall uninfected  IoU>=0.5: 1284/1372 = 93.6% | centre-in-box: 1320/1372 = 96.2%
+  detections 1572, unmatched (IoU<0.5 with any labelled cell) 207 = 13.2% (unlabelled leukocytes / partial cells count here)
+   heuristic detector on these images: infected 25/81 = 30.9%, uninfected 755/1371 = 55.1% (centre-in-box)

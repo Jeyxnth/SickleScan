@@ -30,6 +30,9 @@ data class DashboardStats(
     val overriddenSessionCount: Int,
     /** Condition checks in counted sessions == sum of perDisease totals (== sessionCount + bothConditionsSessions). */
     val conditionChecks: Int,
+    /** Wide-field malaria checks that returned no verdict (too few cells): saved and exported, but not a screening outcome,
+     * so they are left out of every count above. */
+    val inconclusiveChecks: Int = 0,
     /** One entry per [Disease], in enum order, even when that disease has 0 screenings. */
     val perDisease: List<DiseaseStats>,
 )
@@ -54,24 +57,30 @@ object DashboardAggregator {
         nowMillis: Long = System.currentTimeMillis(),
         windowDays: Int = DEFAULT_WINDOW_DAYS,
     ): DashboardStats {
-        // Only sessions that passed the guardrail count. Overridden sessions are saved (and
-        // exported) but reported separately, so a photo the guardrail flagged can't move the
-        // positive/negative percentages. Records whose session isn't a counted one are ignored.
+        // Only sessions that passed the guardrail count. Overridden sessions are saved (and exported) but reported
+        // separately, so a photo the guardrail flagged can't move the positive/negative percentages. Legacy sessions
+        // logged with GUARDRAIL_SKIPPED (Phase 13, wide-field malaria before the guardrail was retrained) count like accepted ones.
+        // Records whose session isn't a counted one are ignored.
         val countedSessionIds = sessions
-            .filter { it.guardrailResult == CaptureSession.GUARDRAIL_ACCEPTED }
+            .filter { it.guardrailResult == CaptureSession.GUARDRAIL_ACCEPTED || it.guardrailResult == CaptureSession.GUARDRAIL_SKIPPED }
             .map { it.id }
             .toSet()
-        val counted = records.filter { it.sessionId in countedSessionIds }
+        val inconclusive = records.filter { it.sessionId in countedSessionIds && it.result == ScreeningRecord.RESULT_INCONCLUSIVE }
+        // A session with only an inconclusive check has no outcome to count as a photo analysed; sessions that also
+        // produced a real result are counted as before.
+        val counted = records.filter { it.sessionId in countedSessionIds && it.result != ScreeningRecord.RESULT_INCONCLUSIVE }
+        val outcomeSessionIds = counted.map { it.sessionId }.toSet()
 
         val perDisease = Disease.entries.map { disease ->
             computeForDisease(disease, counted.filter { it.disease == disease.storageKey }, nowMillis, windowDays)
         }
         val bothConditions = counted.groupBy { it.sessionId }.count { (_, rs) -> rs.map { it.disease }.distinct().size == 2 }
         return DashboardStats(
-            sessionCount = countedSessionIds.size,
+            sessionCount = outcomeSessionIds.size,
             bothConditionsSessions = bothConditions,
             overriddenSessionCount = sessions.count { it.guardrailResult == CaptureSession.GUARDRAIL_OVERRIDDEN },
             conditionChecks = counted.size,
+            inconclusiveChecks = inconclusive.size,
             perDisease = perDisease,
         )
     }

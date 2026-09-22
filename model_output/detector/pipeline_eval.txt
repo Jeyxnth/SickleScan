@@ -1,0 +1,15 @@
+=== photos
+1.webp 400x300: 12 cells detected | classifier >=0.5: 1, >=0.1: 3, max 0.527 | top scores [0.5270000100135803, 0.19599999487400055, 0.14800000190734863, 0.04600000008940697, 0.03999999910593033, 0.03999999910593033]
+2.jpg 410x308: 50 cells detected | classifier >=0.5: 2, >=0.1: 3, max 1.000 | top scores [1.0, 0.6869999766349792, 0.2770000100135803, 0.05999999865889549, 0.03200000151991844, 0.009999999776482582]
+3.jpg 447x447: 2 cells detected | classifier >=0.5: 0, >=0.1: 1, max 0.206 | top scores [0.20600000023841858, 0.04800000041723251]
+4.jpg 509x510: 7 cells detected | classifier >=0.5: 1, >=0.1: 2, max 0.862 | top scores [0.8619999885559082, 0.3179999887943268, 0.012000000104308128, 0.010999999940395355, 0.00800000037997961, 0.004000000189989805]
+=== controls
+30 control files
+controls: 30 images, 1344 cells, per-cell >=0.5: 23 = 1.71%
+  rule 'any >= 0.5': 13/30 images flagged
+  rule '>=3 cells >= 0.5': 3/30 images flagged
+  rule '>=5 cells >= 0.9': 0/30 images flagged
+=== test
+FULL PIPELINE image-level sensitivity, rule 'any cell >= 0.5': 23/30 (heuristic detector: 5/30 at >=0.5, 10/30 at >=0.1; oracle boxes: 74/115 over all infected test images)
+FULL PIPELINE image-level sensitivity, rule 'any cell >= 0.1': 26/30 (heuristic detector: 5/30 at >=0.5, 10/30 at >=0.1; oracle boxes: 74/115 over all infected test images)
+FULL PIPELINE image-level sensitivity, rule '>=3 cells >= 0.5': 1/30 (heuristic detector: 5/30 at >=0.5, 10/30 at >=0.1; oracle boxes: 74/115 over all infected test images)

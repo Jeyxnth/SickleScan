@@ -49,7 +49,7 @@ class ImageClassifierInstrumentedTest {
 
         try {
             expected.forEach { (fileName, expectedLabel) ->
-                val bitmap = context.assets.open("sample_test_images/$fileName").use { stream ->
+                val bitmap = InstrumentationRegistry.getInstrumentation().context.assets.open("sample_test_images/$fileName").use { stream ->
                     BitmapFactory.decodeStream(stream)
                 }
                 requireNotNull(bitmap) { "Failed to decode test asset $fileName" }

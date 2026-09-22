@@ -1,0 +1,17 @@
+Image-level AUC (max cell score), 95% bootstrap over fields:
+  baseline  0.942  [0.898, 0.976]
+  wide      0.936  [0.890, 0.973]
+  hardneg   0.934  [0.890, 0.970]
+  AUC diff hardneg - baseline: -0.008  [-0.031, +0.015]
+  AUC diff wide - baseline: -0.006  [-0.037, +0.025]
+
+Matched operating points (same sensitivity, compare negative-field flag rate):
+  hardneg @0.5: sens 87.2%, neg fields flagged 10% (3/30)
+  baseline @0.5: sens 98.5%, neg fields flagged 50% (15/30)
+  baseline @0.9: sens 93.2%, neg fields flagged 30% (9/30)
+  baseline @0.95: sens 91.7%, neg fields flagged 20% (6/30)
+  baseline @0.98: sens 91.0%, neg fields flagged 20% (6/30)
+  baseline @0.985: sens 90.2%, neg fields flagged 17% (5/30)
+  baseline @0.99: sens 89.5%, neg fields flagged 17% (5/30)
+  baseline @0.995: sens 88.0%, neg fields flagged 13% (4/30)
+  baseline @0.999: sens 75.2%, neg fields flagged 3% (1/30)

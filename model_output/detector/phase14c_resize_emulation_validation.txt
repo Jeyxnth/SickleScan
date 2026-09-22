@@ -1,0 +1,28 @@
+image                                                         src  mean|err| gray levels   exact pixels
+guardrail_test_images__nonsmear_coco.jpg                512x342     0.0000           100.00%
+guardrail_test_images__nonsmear_documents.jpg           386x512     0.0000           100.00%
+guardrail_test_images__nonsmear_lfw.jpg                 250x250     0.0000           100.00%
+guardrail_test_images__nonsmear_places.jpg              256x256     0.0000           100.00%
+guardrail_test_images__nonsmear_screenshots.jpg         512x288     0.0000           100.00%
+guardrail_test_images__nonsmear_synthetic_finger.jpg    640x480     0.0009           99.91%
+malaria_test_images__parasitized_1.png                  127x169     0.0011           99.94%
+malaria_test_images__parasitized_2.png                  139x148     0.0002           99.99%
+malaria_test_images__parasitized_3.png                  130x124     0.0016           99.94%
+malaria_test_images__parasitized_misclassified.png       82x121     0.0001           99.99%
+malaria_test_images__uninfected_1.png                    97x136     0.0093           99.81%
+malaria_test_images__uninfected_2.png                   112x124     0.0014           99.92%
+malaria_test_images__uninfected_3.png                   145x133     0.0003           99.98%
+malaria_test_images__uninfected_4.png                   136x118     0.0154           99.66%
+sample_test_images__neg_140.jpg                        1000x999     0.0191           98.17%
+sample_test_images__neg_46.jpg                         1000x1096    0.0151           98.61%
+sample_test_images__pos_155.jpg                        1000x769     0.0034           99.66%
+sample_test_images__pos_20.jpg                         3217x3057    0.0000           100.00%
+sample_test_images__pos_21.jpg                         3197x3032    0.0000           100.00%
+sample_test_images__pos_213.jpg                        1000x1027    0.0275           97.48%
+sample_test_images__pos_231.jpg                        1000x1023    0.0100           99.14%
+sample_test_images__pos_325.jpg                        1000x996     0.0349           96.90%
+sample_test_images__pos_393.jpg                        1000x1005    0.0167           98.49%
+sample_test_images__pos_64.jpg                         2881x2944    0.0000           100.00%
+sample_test_images__pos_95.jpg                         3191x3150    0.0000           100.00%
+
+emulation vs phone, all 25 images: mean error 0.0063, worst image 0.0349 gray levels

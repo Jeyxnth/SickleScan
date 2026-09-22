@@ -1,0 +1,6 @@
+163 validation fields (133 infected, 30 negative), gate: fewer than 20 cells -> Inconclusive
+fields with fewer than 20 detected cells: 1 -> [('negative', 19, 0.68)]
+Positive/not-Positive decision changed for 0/163 fields
+displayed answer changed for 1/163 fields: [('negative', 'Negative', '->', 'Inconclusive', 19)]
+  without gate: infected fields Positive 120/133, Inconclusive 0 | negative fields Positive 5/30, Negative 25, Inconclusive 0
+  with gate   : infected fields Positive 120/133, Inconclusive 0 | negative fields Positive 5/30, Negative 24, Inconclusive 1

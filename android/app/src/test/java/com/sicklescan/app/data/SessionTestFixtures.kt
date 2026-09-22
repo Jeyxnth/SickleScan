@@ -1,7 +1,13 @@
 package com.sicklescan.app.data
 
 /** One condition's outcome for a test photo. */
-internal data class Rec(val disease: String, val result: String, val confidence: Float = 90f)
+internal data class Rec(
+    val disease: String,
+    val result: String,
+    val confidence: Float = 90f,
+    val wideField: Boolean = false,
+    val cells: Int = 0,
+)
 
 /** Builds consistent (sessions, records) pairs for tests: each photo() is one session with 1-2 records. */
 internal class SessionFixture {
@@ -24,7 +30,10 @@ internal class SessionFixture {
                 disease = it.disease,
                 result = it.result,
                 confidencePercent = it.confidence,
-                referralFlag = it.result != "negative",
+                // Mirrors the app: an inconclusive check (too few cells) is never flagged for referral.
+                referralFlag = it.result != "negative" && it.result != ScreeningRecord.RESULT_INCONCLUSIVE,
+                wideField = it.wideField,
+                cellsDetected = it.cells,
             )
         }
         return id

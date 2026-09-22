@@ -1,0 +1,13 @@
+BBBC041 validation fields: cells per field min 19, 5th percentile 28, median 69; infected-only min 22, negative-only min 19
+Non-smear natural images (360): cells per image median 3, 95th percentile 26, max 162
+
+min cells k | BBBC infected fields kept & caught | BBBC negative fields flagged | non-smear: give a verdict (Neg or Pos) | non-smear: Positive
+          1 | 120/133 = 90.2%                |  5/30 = 16.7%            | 265/360 = 73.6%                      | 12/360 = 3.3%
+          5 | 120/133 = 90.2%                |  5/30 = 16.7%            | 146/360 = 40.6%                      | 10/360 = 2.8%
+         10 | 120/133 = 90.2%                |  5/30 = 16.7%            |  89/360 = 24.7%                      | 10/360 = 2.8%
+         15 | 120/133 = 90.2%                |  5/30 = 16.7%            |  53/360 = 14.7%                      | 9/360 = 2.5%
+         20 | 120/133 = 90.2%                |  5/30 = 16.7%            |  29/360 =  8.1%                      | 4/360 = 1.1%
+         30 | 114/133 = 85.7%                |  5/30 = 16.7%            |  15/360 =  4.2%                      | 3/360 = 0.8%
+         40 | 107/133 = 80.5%                |  4/30 = 13.3%            |   6/360 =  1.7%                      | 2/360 = 0.6%
+
+by category, k=20: {'coco': 7, 'documents': 0, 'dtd': 11, 'lfw': 0, 'places': 6, 'screenshots': 5} of 60 each (documents 60)

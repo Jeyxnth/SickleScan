@@ -1,0 +1,47 @@
+classifier variant: baseline | fields: 133 infected, 30 negative | detector thr 0.3
+
+== Held-out AUC over the 20 CV repeats (pooled out-of-fold scores) ==
+  parameter-free reference: max cell score, all fields: 0.942
+  hand: any cell >= t (max)                  0.942  (repeat-to-repeat sd 0.000, range 0.942-0.942)
+  hand: >=2 cells >= t (2nd highest)         0.826  (repeat-to-repeat sd 0.000, range 0.826-0.826)
+  hand: >=3 cells >= t (3rd highest)         0.747  (repeat-to-repeat sd 0.000, range 0.747-0.747)
+  learned LR, 7 features                     0.916  (repeat-to-repeat sd 0.010, range 0.891-0.930)
+  learned LR, 2 features (max, n cells)      0.915  (repeat-to-repeat sd 0.015, range 0.896-0.943)
+
+== REALISED operating points (threshold set on training folds only; mean over 20 repeats) ==
+
+-- target sensitivity 85% on training folds --
+  hand: any cell >= t (max)                  infected caught 85.0% (sd 0.9%) | negative fields flagged 10.0% [Wilson 95% 3%-26%] (sd across splits 0.0%)
+  hand: >=2 cells >= t (2nd highest)         infected caught 85.2% (sd 1.1%) | negative fields flagged 44.3% [Wilson 95% 28%-62%] (sd across splits 4.1%)
+  hand: >=3 cells >= t (3rd highest)         infected caught 84.9% (sd 1.0%) | negative fields flagged 67.8% [Wilson 95% 50%-82%] (sd across splits 2.4%)
+  learned LR, 7 features                     infected caught 84.5% (sd 1.1%) | negative fields flagged 11.5% [Wilson 95% 4%-27%] (sd across splits 2.7%)
+  learned LR, 2 features (max, n cells)      infected caught 84.6% (sd 1.0%) | negative fields flagged 10.0% [Wilson 95% 3%-26%] (sd across splits 0.0%)
+
+-- target sensitivity 90% on training folds --
+  hand: any cell >= t (max)                  infected caught 90.2% (sd 0.7%) | negative fields flagged 18.3% [Wilson 95% 8%-35%] (sd across splits 2.0%)
+  hand: >=2 cells >= t (2nd highest)         infected caught 89.7% (sd 0.8%) | negative fields flagged 60.0% [Wilson 95% 42%-75%] (sd across splits 3.3%)
+  hand: >=3 cells >= t (3rd highest)         infected caught 89.5% (sd 0.9%) | negative fields flagged 76.5% [Wilson 95% 59%-88%] (sd across splits 2.0%)
+  learned LR, 7 features                     infected caught 89.2% (sd 0.9%) | negative fields flagged 18.7% [Wilson 95% 9%-36%] (sd across splits 3.1%)
+  learned LR, 2 features (max, n cells)      infected caught 89.8% (sd 0.8%) | negative fields flagged 16.8% [Wilson 95% 7%-34%] (sd across splits 3.6%)
+
+-- target sensitivity 95% on training folds --
+  hand: any cell >= t (max)                  infected caught 94.5% (sd 0.6%) | negative fields flagged 36.2% [Wilson 95% 21%-54%] (sd across splits 2.4%)
+  hand: >=2 cells >= t (2nd highest)         infected caught 94.7% (sd 0.7%) | negative fields flagged 78.3% [Wilson 95% 61%-89%] (sd across splits 2.9%)
+  hand: >=3 cells >= t (3rd highest)         infected caught 94.4% (sd 0.7%) | negative fields flagged 85.8% [Wilson 95% 69%-94%] (sd across splits 2.3%)
+  learned LR, 7 features                     infected caught 93.5% (sd 0.9%) | negative fields flagged 33.5% [Wilson 95% 19%-51%] (sd across splits 4.4%)
+  learned LR, 2 features (max, n cells)      infected caught 94.7% (sd 0.7%) | negative fields flagged 30.0% [Wilson 95% 17%-48%] (sd across splits 3.2%)
+
+== Fixed hand-picked rules, no fitting (all fields) ==
+  any cell >= 0.5      infected caught 98.5% | negative fields flagged 50.0% (15/30)
+  any cell >= 0.9      infected caught 93.2% | negative fields flagged 30.0% (9/30)
+  >=2 cells >= 0.5     infected caught 80.5% | negative fields flagged 36.7% (11/30)
+  >=3 cells >= 0.5     infected caught 58.6% | negative fields flagged 20.0% (6/30)
+
+Coefficients of the model fitted on ALL fields (standardised features; descriptive only, C = 1.0 ):
+  logit(max)         +2.40
+  logit(mean top3)   +0.49
+  logit(mean top5)   +0.26
+  log1p(n>=0.5)      -0.47
+  log1p(n>=0.7)      +0.09
+  log1p(n>=0.9)      -0.60
+  log1p(n cells)     +0.47

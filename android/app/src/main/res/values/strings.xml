@@ -31,13 +31,25 @@
     <string name="dashboard_disease_empty">No screenings for this condition yet.</string>
     <string name="dashboard_trend_sickle">Sickle Cell — cases flagged for lab confirmation this week</string>
     <string name="dashboard_trend_malaria">Malaria — cases flagged for lab confirmation this week</string>
-    <string name="cross_domain_warning">Each model is trained on its own kind of image: Sickle Cell on blood-smear field photos, Malaria on single-cell images. If this photo was taken for one condition, treat the other condition\'s result as unreliable, even when it shows high confidence.</string>
+    <string name="cross_domain_warning">Each model is trained on its own kind of image: Sickle Cell on blood-smear field photos, Malaria on thin-smear malaria images. If this photo was taken for one condition, treat the other condition\'s result as unreliable, even when it shows high confidence.</string>
     <string name="cross_domain_warning_title">Two results, one photo</string>
     <string name="dashboard_empty">No screenings logged yet. Results are recorded automatically after each analysis.</string>
 
     <string name="disease_sickle_cell">Sickle Cell</string>
     <string name="disease_malaria">Malaria</string>
     <string name="malaria_input_hint">For best results, use a close-up image of a single blood cell.</string>
+    <string name="malaria_mode_wide">Wide field (many cells in view)</string>
+    <string name="malaria_mode_single">Single cell (close-up)</string>
+    <string name="malaria_hint_wide">Use a wide view of a thin blood smear, with many cells in the frame.</string>
+    <string name="malaria_field_title">Malaria · wide field</string>
+    <string name="malaria_field_finding">Finding cells…</string>
+    <string name="malaria_field_checking">Checking cells… %1$d of %2$d</string>
+    <string name="malaria_field_top_score">Highest cell score: %1$.1f%%</string>
+    <string name="malaria_field_detail">Cells analysed: %1$d · took %2$.1f s</string>
+    <string name="malaria_field_context">In validation tests this check flagged about %1$d%% of infected fields and about %2$d%% of clean fields. Very sparse images (fewer than about %3$d detected cells) return Inconclusive instead of a result. Those tests used one kind of dense thin-smear image, so treat a result on other images with extra caution.</string>
+    <string name="malaria_no_cells_label">Inconclusive</string>
+    <string name="malaria_too_few_cells_message">Only %1$d cells were found (fewer than %2$d), so there is no malaria result. This check needs a wide view of a dense thin blood smear with many cells in the frame. For a close-up of one cell, choose \'Single cell\'.</string>
+    <string name="dashboard_inconclusive_format">%1$d wide-field checks were inconclusive (too few cells) and are not counted in the figures below.</string>
     <string name="export_csv">Export CSV</string>
     <string name="export_empty">Nothing to export yet — run a screening first.</string>
     <string name="export_failed">Couldn\'t export the CSV file. Please try again.</string>

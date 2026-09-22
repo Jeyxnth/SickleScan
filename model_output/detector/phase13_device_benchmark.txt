@@ -1,0 +1,7 @@
+--------- beginning of main
+reference   threads4 batch1  cropThreads1 | 10 fields: median 3987 ms, mean 3674 ms, max 5024 ms | mean detect 318, crop 1281, classify 1923 ms | max top-score diff vs reference 0.000000
+batch8      threads4 batch8  cropThreads1 | 10 fields: median 3952 ms, mean 3704 ms, max 5110 ms | mean detect 317, crop 1290, classify 1950 ms | max top-score diff vs reference 0.000000
+batch8+crop4 threads4 batch8 cropThreads4 | 10 fields: median 3072 ms, mean 2920 ms, max 3989 ms | mean detect 317, crop 486, classify 1969 ms | max top-score diff vs reference 0.000000
+batch16+crop4 threads4 batch16 cropThreads4 | 10 fields: median 3176 ms, mean 2949 ms, max 4066 ms | mean detect 315, crop 425, classify 2061 ms | max top-score diff vs reference 0.000000
+batch8+crop4 threads6 batch8 cropThreads4 | 10 fields: median 3071 ms, mean 2913 ms, max 3983 ms | mean detect 315, crop 485, classify 1964 ms | max top-score diff vs reference 0.000000
+batch8+crop6 threads4 batch8 cropThreads6 | 10 fields: median 3004 ms, mean 2849 ms, max 3897 ms | mean detect 316, crop 435, classify 1950 ms | max top-score diff vs reference 0.000000

@@ -1,0 +1,8 @@
+===== BBBC041 VAL malaria-negative fields: 30 images, 1930 labelled cells =====
+detector thr 0.2: detected 2184 cells (113% of labelled) | per-cell >=0.5: 41/2184 = 1.88% [95% CI 1.39%-2.54%] | fields flagged: any>=0.5 16/30 [CI 36%-70%], >=3 cells>=0.5 6/30, >=5 cells>=0.9 0/30
+detector thr 0.3: detected 2096 cells (109% of labelled) | per-cell >=0.5: 39/2096 = 1.86% [95% CI 1.36%-2.53%] | fields flagged: any>=0.5 15/30 [CI 33%-67%], >=3 cells>=0.5 6/30, >=5 cells>=0.9 0/30
+detector thr 0.4: detected 2003 cells (104% of labelled) | per-cell >=0.5: 32/2003 = 1.60% [95% CI 1.13%-2.25%] | fields flagged: any>=0.5 13/30 [CI 27%-61%], >=3 cells>=0.5 5/30, >=5 cells>=0.9 0/30
+===== BBBC041 TEST malaria-negative fields: 3 images, 97 labelled cells =====
+detector thr 0.2: detected 120 cells (124% of labelled) | per-cell >=0.5: 0/120 = 0.00% [95% CI 0.00%-3.10%] | fields flagged: any>=0.5 0/3 [CI 0%-56%], >=3 cells>=0.5 0/3, >=5 cells>=0.9 0/3
+detector thr 0.3: detected 112 cells (115% of labelled) | per-cell >=0.5: 0/112 = 0.00% [95% CI 0.00%-3.32%] | fields flagged: any>=0.5 0/3 [CI 0%-56%], >=3 cells>=0.5 0/3, >=5 cells>=0.9 0/3
+detector thr 0.4: detected 103 cells (106% of labelled) | per-cell >=0.5: 0/103 = 0.00% [95% CI 0.00%-3.60%] | fields flagged: any>=0.5 0/3 [CI 0%-56%], >=3 cells>=0.5 0/3, >=5 cells>=0.9 0/3

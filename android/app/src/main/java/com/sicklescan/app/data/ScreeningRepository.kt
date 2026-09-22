@@ -9,6 +9,8 @@ data class LoggedResult(
     val result: String,
     val confidencePercent: Float,
     val referralFlag: Boolean,
+    val wideField: Boolean = false,
+    val cellsDetected: Int = 0,
 )
 
 /** Thin wrapper over Room -- keeps Fragments from touching the DAO/DB directly. */
@@ -40,6 +42,8 @@ class ScreeningRepository(context: Context) {
                     result = it.result,
                     confidencePercent = it.confidencePercent,
                     referralFlag = it.referralFlag,
+                    wideField = it.wideField,
+                    cellsDetected = it.cellsDetected,
                 )
             },
         )

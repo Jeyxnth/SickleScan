@@ -1,0 +1,40 @@
+Instructions for updating:
+Use `tf.image.resize(...method=ResizeMethod.BILINEAR...)` instead.
+image                                                      src decode-diff | tensor diff (0-255 units): mean  max | closest resampler to the PHONE tensor (mean abs err)
+guardrail_test_images__nonsmear_coco.jpg              512x342            6 |   1.00    9.4 | tf.image.resize bilinear then round to uint8 (0.977); tf-half-pixel 1.005
+guardrail_test_images__nonsmear_documents.jpg         386x512            5 |   0.73   13.4 | cv2 INTER_LINEAR (uint8 out) (0.717); tf-half-pixel 0.734
+guardrail_test_images__nonsmear_lfw.jpg               250x250            6 |   0.81    8.4 | tf.image.resize bilinear then round to uint8 (0.781); tf-half-pixel 0.808
+guardrail_test_images__nonsmear_places.jpg            256x256            6 |   1.17   12.1 | tf.image.resize bilinear then round to uint8 (1.147); tf-half-pixel 1.171
+guardrail_test_images__nonsmear_screenshots.jpg       512x288            5 |   0.55    9.8 | tf.image.resize bilinear then round to uint8 (0.545); tf-half-pixel 0.553
+guardrail_test_images__nonsmear_synthetic_finger.jpg  640x480            3 |   0.80    3.2 | tf.image.resize bilinear then round to uint8 (0.778); tf-half-pixel 0.803
+malaria_test_images__parasitized_1.png                127x169            0 |   0.46   18.5 | cv2 INTER_LINEAR (uint8 out) (0.377); tf-half-pixel 0.457
+malaria_test_images__parasitized_2.png                139x148            0 |   0.47   16.1 | cv2 INTER_LINEAR (uint8 out) (0.388); tf-half-pixel 0.471
+malaria_test_images__parasitized_3.png                130x124            0 |   0.51   20.2 | cv2 INTER_LINEAR (uint8 out) (0.420); tf-half-pixel 0.512
+malaria_test_images__parasitized_misclassified.png     82x121            0 |   0.46   17.4 | cv2 INTER_LINEAR (uint8 out) (0.399); tf-half-pixel 0.459
+malaria_test_images__uninfected_1.png                  97x136            0 |   0.50   16.6 | cv2 INTER_LINEAR (uint8 out) (0.407); tf-half-pixel 0.503
+malaria_test_images__uninfected_2.png                 112x124            0 |   0.42   12.4 | cv2 INTER_LINEAR (uint8 out) (0.341); tf-half-pixel 0.419
+malaria_test_images__uninfected_3.png                 145x133            0 |   0.35   16.9 | cv2 INTER_LINEAR (uint8 out) (0.297); tf-half-pixel 0.355
+malaria_test_images__uninfected_4.png                 136x118            0 |   0.48   17.7 | cv2 INTER_LINEAR (uint8 out) (0.403); tf-half-pixel 0.481
+sample_test_images__neg_140.jpg                      1000x999            4 |   0.90    7.1 | tf.image.resize bilinear then round to uint8 (0.867); tf-half-pixel 0.897
+sample_test_images__neg_46.jpg                       1000x1096           5 |   0.85    8.2 | tf.image.resize bilinear then round to uint8 (0.833); tf-half-pixel 0.854
+sample_test_images__pos_155.jpg                      1000x769            9 |   0.74    7.1 | tf.image.resize bilinear then round to uint8 (0.712); tf-half-pixel 0.737
+sample_test_images__pos_20.jpg                       3217x3057           7 |   0.81    9.3 | tf.image.resize bilinear then round to uint8 (0.775); tf-half-pixel 0.810
+sample_test_images__pos_21.jpg                       3197x3032           5 |   0.79    5.8 | tf.image.resize bilinear then round to uint8 (0.761); tf-half-pixel 0.792
+sample_test_images__pos_213.jpg                      1000x1027           4 |   0.74    5.9 | tf.image.resize bilinear then round to uint8 (0.707); tf-half-pixel 0.736
+sample_test_images__pos_231.jpg                      1000x1023           5 |   1.02    8.2 | tf.image.resize bilinear then round to uint8 (1.005); tf-half-pixel 1.022
+sample_test_images__pos_325.jpg                      1000x996            4 |   0.74    7.3 | tf.image.resize bilinear then round to uint8 (0.718); tf-half-pixel 0.742
+sample_test_images__pos_393.jpg                      1000x1005           4 |   1.00    9.0 | tf.image.resize bilinear then round to uint8 (0.979); tf-half-pixel 1.001
+sample_test_images__pos_64.jpg                       2881x2944           5 |   0.83    4.7 | tf.image.resize bilinear then round to uint8 (0.809); tf-half-pixel 0.832
+sample_test_images__pos_95.jpg                       3191x3150           5 |   0.84    4.5 | tf.image.resize bilinear then round to uint8 (0.815); tf-half-pixel 0.841
+
+Decoded pixels identical (max abs diff 0) for 8 of 25 images
+images whose tensors differ by more than 0.5 gray levels on average: 19 of 25
+
+Downstream effect (probabilities: python-tensor vs phone-tensor, same desktop model):
+  sickle   : max |dP| 0.0647, mean 0.0111, images with |dP| > 0.03: 2/25; decisions (>=0.5) that flip: 0
+  malaria  : max |dP| 0.0291, mean 0.0049, images with |dP| > 0.03: 0/25; decisions (>=0.5) that flip: 0
+  guardrail: max |dP| 0.0216, mean 0.0009, images with |dP| > 0.03: 0/25; decisions (>=0.5) that flip: 0
+
+the test image malaria_test_images__parasitized_1.png: sickle P python-tensor 0.8061 vs phone-tensor 0.8515
+
+largest downstream sickle differences: [(0.0647, 'malaria_test_images__uninfected_3.png'), (0.0454, 'malaria_test_images__parasitized_1.png'), (0.0276, 'sample_test_images__pos_21.jpg'), (0.0241, 'malaria_test_images__parasitized_3.png'), (0.0172, 'malaria_test_images__parasitized_misclassified.png')]

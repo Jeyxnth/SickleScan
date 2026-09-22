@@ -2,26 +2,22 @@ package com.sicklescan.app
 
 import android.content.Context
 import android.graphics.Bitmap
-import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
-import org.tensorflow.lite.support.common.ops.NormalizeOp
-import org.tensorflow.lite.support.image.ImageProcessor
-import org.tensorflow.lite.support.image.TensorImage
-import org.tensorflow.lite.support.image.ops.ResizeOp
 import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * Wraps one bundled TFLite model: a disease classifier (see [Disease]) or the
  * Phase 7 guardrail (smear / not-smear, see [GuardrailInterpreter]).
- * Preprocessing here must match training exactly: images were resized to
- * the model's expected input size with bilinear interpolation, then scaled
- * from [0,255] to [-1,1] via `(pixel - 127.5) / 127.5` (this is Keras'
- * `mobilenet_v2.preprocess_input`, mode "tf") -- true for both the sickle
- * cell and malaria models, since both were trained with the identical
- * pipeline. Each model's actual input tensor shape/dtype is inspected at
- * load time from the model itself, not assumed to be [1,224,224,3] just
- * because that's what it was for sickle cell.
+ * Preprocessing here must match training exactly: images are resized to the model's input size with TensorFlow's bilinear
+ * resize (see [ImageOps.resizeBilinearTf], an exact float re-implementation of `tf.image.resize`, the call the training and
+ * validation pipelines used; Phase 14c showed the previous Android createScaledBitmap resize differed from it by about 0.5 gray
+ * level on average, enough to move an out-of-domain probability by 0.045), then scaled from [0,255] to [-1,1] via
+ * `(pixel - 127.5) / 127.5` (Keras' `mobilenet_v2.preprocess_input`, mode "tf"). True for the sickle cell, malaria and guardrail
+ * models alike. Each model's actual input tensor shape/dtype is inspected at load time from the model itself, not assumed to be
+ * [1,224,224,3] just because that's what it was for sickle cell.
  */
 class ImageClassifier(context: Context, private val modelAsset: String, private val labelsAsset: String) {
 
@@ -34,7 +30,8 @@ class ImageClassifier(context: Context, private val modelAsset: String, private 
     val labels: List<String>
     private val inputWidth: Int
     private val inputHeight: Int
-    private val imageProcessor: ImageProcessor
+    private lateinit var pixels: FloatArray
+    private lateinit var inputBuffer: ByteBuffer
 
     init {
         try {
@@ -46,10 +43,8 @@ class ImageClassifier(context: Context, private val modelAsset: String, private 
             inputHeight = inputShape[1]
             inputWidth = inputShape[2]
 
-            imageProcessor = ImageProcessor.Builder()
-                .add(ResizeOp(inputHeight, inputWidth, ResizeOp.ResizeMethod.BILINEAR))
-                .add(NormalizeOp(NORMALIZE_MEAN, NORMALIZE_STD))
-                .build()
+            pixels = FloatArray(inputHeight * inputWidth * 3)
+            inputBuffer = ByteBuffer.allocateDirect(pixels.size * 4).order(ByteOrder.nativeOrder())
         } catch (e: IOException) {
             throw ClassifierException("Failed to load model or labels from assets", e)
         } catch (e: Exception) {
@@ -76,14 +71,17 @@ class ImageClassifier(context: Context, private val modelAsset: String, private 
      */
     fun classify(bitmap: Bitmap): Float {
         try {
-            var tensorImage = TensorImage(DataType.FLOAT32)
-            tensorImage.load(bitmap)
-            tensorImage = imageProcessor.process(tensorImage)
+            val w = bitmap.width
+            val h = bitmap.height
+            ImageOps.classifierInput({ y, dest -> bitmap.getPixels(dest, 0, w, 0, y, w, 1) }, w, h, inputWidth, inputHeight, pixels)
+            inputBuffer.rewind()
+            inputBuffer.asFloatBuffer().put(pixels)
+            inputBuffer.rewind()
 
             // Single sigmoid output: labels[0] = negative, labels[1] = positive
             // (order fixed by labels.txt / how the model was trained).
             val output = Array(1) { FloatArray(1) }
-            interpreter.run(tensorImage.buffer, output)
+            interpreter.run(inputBuffer, output)
 
             return output[0][0]
         } catch (e: Exception) {
@@ -95,10 +93,4 @@ class ImageClassifier(context: Context, private val modelAsset: String, private 
         interpreter.close()
     }
 
-    companion object {
-        // (x - 127.5) / 127.5 maps [0,255] -> [-1,1], matching
-        // tf.keras.applications.mobilenet_v2.preprocess_input used in training.
-        private const val NORMALIZE_MEAN = 127.5f
-        private const val NORMALIZE_STD = 127.5f
-    }
 }

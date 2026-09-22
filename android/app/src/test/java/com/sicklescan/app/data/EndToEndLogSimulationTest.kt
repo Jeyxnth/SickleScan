@@ -102,7 +102,7 @@ class EndToEndLogSimulationTest {
         )
 
         val lines = csv.trim().split("\n")
-        assertEquals("session_id,timestamp,disease,result,confidence_percent,referral_flag,image_check", lines[0])
+        assertEquals("session_id,timestamp,disease,result,confidence_percent,referral_flag,image_check,input_mode,cells_detected", lines[0])
         assertEquals(1 + 19, lines.size) // 18 counted rows + 1 overridden row
         // Session linkage: each both-condition photo yields two rows with the same session_id.
         val rowsBySession = lines.drop(1).map { it.split(",") }.groupBy { it[0] }
@@ -111,7 +111,7 @@ class EndToEndLogSimulationTest {
             assertEquals(setOf("sickle_cell", "malaria"), rows.map { it[2] }.toSet())
             assertEquals("same photo -> same timestamp", rows[0][1], rows[1][1])
         }
-        assertTrue(lines.drop(1).count { it.endsWith(",overridden") } == 1)
+        assertTrue(lines.drop(1).count { it.contains(",overridden,") } == 1)
     }
 
     /**
